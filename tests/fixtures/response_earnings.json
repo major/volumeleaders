@@ -1,0 +1,226 @@
+{
+  "data": [
+    {
+      "Ticker": "BSET",
+      "Name": "Bassett Furniture Industries, Incorporated",
+      "Sector": "Consumer Cyclical",
+      "Industry": "Household Goods",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 0,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "CAG",
+      "Name": "Conagra Brands, Inc.",
+      "Sector": "Consumer Staples",
+      "Industry": "Food Products",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 1,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 1
+    },
+    {
+      "Ticker": "CALM",
+      "Name": "Cal-Maine Foods, Inc.",
+      "Sector": "Consumer Staples",
+      "Industry": "Food Products",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 1,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "LW",
+      "Name": "Lamb Weston Holdings, Inc.",
+      "Sector": "Consumer Staples",
+      "Industry": "Food Products",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 5,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "MSM",
+      "Name": "MSC Industrial Direct Co., Inc. Class A",
+      "Sector": "Industrials",
+      "Industry": "Trading Companies and Distributors",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 2,
+      "TradeClusterCount": 3,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "NG",
+      "Name": "NovaGold Resources Inc.",
+      "Sector": "Materials",
+      "Industry": "Metals and Mining",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 2,
+      "TradeClusterCount": 3,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "TLRY",
+      "Name": "Tilray, Inc. ",
+      "Sector": "Healthcare",
+      "Industry": "Cannabis",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 0,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "UNF",
+      "Name": "Unifirst Corp",
+      "Sector": "Industrials",
+      "Industry": "Commercial Services and Supplies",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 4,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "KITT",
+      "Name": "Nauticus Robotics, Inc.",
+      "Sector": "Industrials",
+      "Industry": "Aerospace and Defense",
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 0,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "PENG",
+      "Name": "Penguin Solutions, Inc.",
+      "Sector": "Technology",
+      "Industry": null,
+      "EarningsDate": "/Date(1775001600000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 2,
+      "TradeClusterCount": 3,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "ANGO",
+      "Name": "AngioDynamics, Inc.",
+      "Sector": "Healthcare",
+      "Industry": "Health Care Equipment and Supplies",
+      "EarningsDate": "/Date(1775088000000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 1,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "AYI",
+      "Name": "Acuity Brands, Inc.",
+      "Sector": "Industrials",
+      "Industry": "Electrical Equipment",
+      "EarningsDate": "/Date(1775088000000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 5,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "GBX",
+      "Name": "The Greenbrier Companies, Inc.",
+      "Sector": "Industrials",
+      "Industry": "Machinery",
+      "EarningsDate": "/Date(1775520000000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 1,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "LEVI",
+      "Name": "Levi Strauss & Co. ",
+      "Sector": "Consumer Disc",
+      "Industry": "Textiles, Apparel and Luxury Goods",
+      "EarningsDate": "/Date(1775520000000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 2,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "APLD",
+      "Name": "Applied Science Products, Inc. New Common Stock",
+      "Sector": "Technology",
+      "Industry": "Information Technology Services",
+      "EarningsDate": "/Date(1775606400000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 7,
+      "TradeClusterCount": 7,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "DAL",
+      "Name": "Delta Air Lines, Inc.",
+      "Sector": "Industrials",
+      "Industry": "Airlines",
+      "EarningsDate": "/Date(1775606400000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 5,
+      "TradeClusterCount": 4,
+      "TradeClusterBombCount": 1
+    },
+    {
+      "Ticker": "PSMT",
+      "Name": "PriceSmart, Inc.",
+      "Sector": "Consumer Staples",
+      "Industry": "Food and Staples Retailing",
+      "EarningsDate": "/Date(1775606400000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 2,
+      "TradeClusterCount": 2,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "RGP",
+      "Name": "Resources Connection, Inc.",
+      "Sector": "Industrials",
+      "Industry": "Professional Services",
+      "EarningsDate": "/Date(1775606400000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 0,
+      "TradeClusterCount": 0,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "RPM",
+      "Name": "RPM International, Inc.",
+      "Sector": "Materials",
+      "Industry": "Chemicals",
+      "EarningsDate": "/Date(1775606400000)/",
+      "AfterMarketClose": false,
+      "TradeCount": 1,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 0
+    },
+    {
+      "Ticker": "STZ",
+      "Name": "Constellation Brands, Inc.",
+      "Sector": "Consumer Staples",
+      "Industry": "Beverages",
+      "EarningsDate": "/Date(1775606400000)/",
+      "AfterMarketClose": true,
+      "TradeCount": 1,
+      "TradeClusterCount": 1,
+      "TradeClusterBombCount": 0
+    }
+  ],
+  "recordsTotal": 20,
+  "recordsFiltered": 20
+}

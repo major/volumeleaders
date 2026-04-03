@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "Date": "/Date(1775001600000)/",
+      "DateKey": 20260401,
+      "SecurityKey": 29309,
+      "Ticker": "SPY",
+      "Sector": "Large Caps",
+      "Industry": "",
+      "Name": "SPDR S&P 500 ETF Trust",
+      "MinFullDateTime": "2026-04-01T10:28:41",
+      "MaxFullDateTime": "2026-04-01T17:55:09",
+      "MinFullTimeString24": "10:28:41",
+      "MaxFullTimeString24": "17:55:09",
+      "Price": 655.1,
+      "ClosePrice": 0,
+      "Dollars": 2161228478.76,
+      "AverageBlockSizeShares": 0,
+      "AverageBlockSizeDollars": 0,
+      "Volume": 3299187,
+      "TradeCount": 29,
+      "LastComparibleTradeClusterDate": "/Date(1774915200000)/",
+      "IPODate": "/Date(728265600000)/",
+      "DollarsMultiplier": 7.1165690316374555,
+      "CumulativeDistribution": 0.9701,
+      "TradeClusterRank": 9999,
+      "AverageDailyVolume": 0,
+      "EOM": true,
+      "EOQ": true,
+      "EOY": false,
+      "OPEX": false,
+      "VOLEX": false,
+      "InsideBar": 0,
+      "DoubleInsideBar": 0,
+      "TotalRows": 2,
+      "ExternalFeed": false
+    }
+  ],
+  "recordsTotal": 2,
+  "recordsFiltered": 2
+}

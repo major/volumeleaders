@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "Ticker": "WTID",
+      "Sector": "3x Bear Energy",
+      "Industry": "Energy",
+      "Name": "MicroSectors Energy -3X Inverse Leveraged ETN",
+      "Date": "/Date(1775001600000)/",
+      "MinDate": "/Date(1774224000000)/",
+      "MaxDate": "/Date(1774224000000)/",
+      "FullDateTime": "2026-04-01 : 17:51:00",
+      "FullTimeString24": "17:51:00",
+      "Dates": "2026-03-23 - 2026-03-23",
+      "Price": 4.6,
+      "Dollars": 738341.52,
+      "Volume": 161917,
+      "Trades": 1,
+      "CumulativeDistribution": 1,
+      "TradeLevelRank": 1,
+      "TotalRows": 1705,
+      "TradeLevelTouches": 0,
+      "RelativeSize": 1
+    }
+  ],
+  "recordsTotal": 1705,
+  "recordsFiltered": 1705
+}

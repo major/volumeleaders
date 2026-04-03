@@ -1,0 +1,18 @@
+{
+  "ticker": {
+    "lastQuote": {
+      "t": 1775080520775715000,
+      "p": 655,
+      "s": 1920,
+      "P": 655.08,
+      "S": 80
+    },
+    "lastTrade": {
+      "p": 655.01
+    },
+    "ticker": "SPY",
+    "todaysChange": 4.669999999999959,
+    "todaysChangePerc": 0.7180859242857519
+  },
+  "status": "OK"
+}

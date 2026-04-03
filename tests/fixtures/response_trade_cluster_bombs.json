@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "Date": "/Date(1775088000000)/",
+      "DateKey": 20260402,
+      "SecurityKey": 22635,
+      "Ticker": "NVS",
+      "Sector": "Healthcare",
+      "Industry": "Pharma",
+      "Name": "Novartis AG",
+      "MinFullDateTime": "2026-04-02T09:41:36",
+      "MaxFullDateTime": "2026-04-02T11:27:59",
+      "MinFullTimeString24": "09:41:36",
+      "MaxFullTimeString24": "11:27:59",
+      "ClosePrice": 0.0,
+      "Dollars": 77878074.77,
+      "AverageBlockSizeShares": 0,
+      "AverageBlockSizeDollars": 0.0,
+      "Volume": 506100,
+      "TradeCount": 8,
+      "LastComparableTradeClusterBombDate": "/Date(1292371200000)/",
+      "IPODate": "/Date(958003200000)/",
+      "DollarsMultiplier": 0.75422940546277302697,
+      "CumulativeDistribution": 0.5000,
+      "TradeClusterBombRank": 2,
+      "AverageDailyVolume": 0,
+      "EOM": false,
+      "EOQ": false,
+      "EOY": false,
+      "OPEX": false,
+      "VOLEX": false,
+      "InsideBar": 0,
+      "DoubleInsideBar": 0,
+      "TotalRows": 1,
+      "ExternalFeed": false
+    }
+  ],
+  "recordsTotal": 1,
+  "recordsFiltered": 1
+}

@@ -1,0 +1,39 @@
+[project]
+name = "volumeleaders"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Major Hayden", email = "major@mhtx.net" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "browser-cookie3>=0.20.1",
+    "beautifulsoup4",
+    "httpx>=0.28.1",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+mcp = [
+    "fastmcp>=3.2",
+]
+
+[project.scripts]
+volumeleaders = "volumeleaders:main"
+volumeleaders-mcp = "volumeleaders.mcp:main"
+
+[build-system]
+requires = ["uv_build>=0.11.2,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=7.1.0",
+    "pytest-randomly>=4.0.1",
+    "radon>=6.0.1",
+    "ruff>=0.15.8",
+    "ty>=0.0.27",
+    "vulture>=2.16",
+]
