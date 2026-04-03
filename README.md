@@ -1,10 +1,12 @@
-# volumeleaders
+# Python client and MCP server for volumeleaders.com
 
 > **Unofficial.** This project is not affiliated with, endorsed by, or connected to [volumeleaders.com](https://www.volumeleaders.com) in any way.
 
-Python client for [volumeleaders.com](https://www.volumeleaders.com) institutional block trade data.
+Python client and [MCP server](https://modelcontextprotocol.io/) for [volumeleaders.com](https://www.volumeleaders.com) institutional block trade data.
 
-Extracts auth cookies from your browser session and provides typed access to all VolumeLeaders API endpoints, returning Pydantic models.
+Use it as a **Python library** to query institutional block trades, trade clusters, trade levels, and more with typed Pydantic models. Or run it as an **MCP server** to give AI coding assistants direct access to the same data.
+
+Authentication works by extracting cookies from your browser session (no API keys needed).
 
 ## Prerequisites
 
