@@ -1,5 +1,7 @@
 # volumeleaders
 
+> **Unofficial.** This project is not affiliated with, endorsed by, or connected to [volumeleaders.com](https://www.volumeleaders.com) in any way.
+
 Python client for [volumeleaders.com](https://www.volumeleaders.com) institutional block trade data.
 
 Extracts auth cookies from your browser session and provides typed access to all VolumeLeaders API endpoints, returning Pydantic models.
