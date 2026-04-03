@@ -70,6 +70,70 @@ with VolumeLeadersClient() as client:
 
 All endpoint functions take a `VolumeLeadersClient` as the first argument and return typed Pydantic models.
 
+## MCP Server
+
+The library includes an [MCP](https://modelcontextprotocol.io/) server that exposes VolumeLeaders data as tools for AI coding assistants. Five tools are available: `trades`, `trade_clusters`, `trade_cluster_bombs`, `trade_levels`, and `trade_level_touches`.
+
+### Quick start with uv
+
+No installation needed:
+
+```bash
+uv run --with "volumeleaders[mcp]" volumeleaders-mcp
+```
+
+Or if the package is already installed:
+
+```bash
+volumeleaders-mcp
+```
+
+### Client configuration
+
+<details>
+<summary>Claude Code (.mcp.json)</summary>
+
+Create `.mcp.json` in your project root.
+
+**Using uv:**
+
+```json
+{
+  "mcpServers": {
+    "volumeleaders": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--with", "volumeleaders[mcp]", "volumeleaders-mcp"]
+    }
+  }
+}
+```
+
+After adding the config, restart Claude Code and run `/mcp` to verify the server appears.
+
+</details>
+
+<details>
+<summary>OpenCode (opencode.json)</summary>
+
+Add to `opencode.json` (or `opencode.jsonc`) in your project root.
+
+**Using uv:**
+
+```jsonc
+{
+  "mcp": {
+    "volumeleaders": {
+      "type": "local",
+      "command": ["uv", "run", "--with", "volumeleaders[mcp]", "volumeleaders-mcp"]
+    }
+  }
+}
+```
+
+
+</details>
+
 ## License
 
 MIT
