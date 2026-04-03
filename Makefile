@@ -24,3 +24,4 @@ docs:
 
 docs-serve:
 	uv run --group docs properdocs serve
+
