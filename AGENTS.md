@@ -89,7 +89,6 @@ make docs          # properdocs build (requires docs dep group)
 - CI runs on GitHub Actions (`.github/workflows/ci.yml`): lint, typecheck, radon, test. Mirrors `make ci`.
 - Requires Python >= 3.14 (current stable).
 - Auth requires user to be logged into volumeleaders.com in Firefox first. No programmatic login.
-- `DEVELOPMENT_PLAN.md` is the authoritative architecture doc with full API reference table and implementation order.
 - MCP server: `uv run volumeleaders-mcp` or `uv run fastmcp dev src/volumeleaders/mcp/__init__.py`.
 - **Keep AGENTS.md current**: Update this file and its children (`src/volumeleaders/AGENTS.md`, `models/AGENTS.md`, `endpoints/AGENTS.md`) when adding modules, changing conventions, or altering the project structure.
 - **Keep README.md current**: Update README.md when adding new endpoints, changing usage patterns, or altering the public API surface. README.md is user-facing documentation and should reflect the current state of the library.

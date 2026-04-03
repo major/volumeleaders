@@ -1,7 +1,7 @@
 [project]
 name = "volumeleaders"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python API client for volumeleaders.com institutional block trade data"
 readme = "README.md"
 authors = [
     { name = "Major Hayden", email = "major@mhtx.net" }
