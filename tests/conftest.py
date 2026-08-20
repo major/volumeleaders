@@ -107,6 +107,42 @@ def sample_snapshot_string() -> str:
 
 
 @pytest.fixture
+def sample_sector_breakdown_response() -> list[dict[str, Any]]:
+    """Return parsed sector breakdown response payload."""
+    return _load_json_file("response_sector_breakdown.json")  # type: ignore[return-value]
+
+
+@pytest.fixture
+def sample_institutional_outliers_response() -> list[dict[str, Any]]:
+    """Return parsed institutional outliers response payload."""
+    return _load_json_file("response_institutional_outliers.json")  # type: ignore[return-value]
+
+
+@pytest.fixture
+def sample_sector_themes_response() -> list[dict[str, Any]]:
+    """Return parsed sector theme notional response payload."""
+    return _load_json_file("response_notional_by_sector_by_name.json")  # type: ignore[return-value]
+
+
+@pytest.fixture
+def sample_supply_demand_areas_response() -> list[dict[str, Any]]:
+    """Return parsed supply demand areas response payload."""
+    return _load_json_file("response_supply_demand_areas.json")  # type: ignore[return-value]
+
+
+@pytest.fixture
+def sample_sector_daily_returns_response() -> list[dict[str, Any]]:
+    """Return parsed sector daily returns response payload."""
+    return _load_json_file("response_sector_daily_returns.json")  # type: ignore[return-value]
+
+
+@pytest.fixture
+def sample_dark_pool_volume_report_response() -> list[dict[str, Any]]:
+    """Return parsed dark pool volume report response payload."""
+    return _load_json_file("response_dark_pool_volume_report.json")  # type: ignore[return-value]
+
+
+@pytest.fixture
 def mock_client() -> tuple[Any, Mock]:
     """Create a VolumeLeadersClient with mocked HTTP transport, bypassing auth."""
     _client_module = import_module("volumeleaders._client")

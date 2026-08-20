@@ -127,6 +127,25 @@ class VolumeLeadersClient:
         """
         return self._post(path, json=payload)
 
+    def post_form(self, path: str, body: str) -> JSONResponse:
+        """POST a URL-encoded form body and return parsed JSON.
+
+        Used by form-encoded endpoints like GetSectorDailyReturns that return
+        a raw JSON list or dict rather than a DataTables wrapper.
+
+        Args:
+            path: API path (e.g. "/SectorBreakdown/GetSectorDailyReturns").
+            body: URL-encoded form body string (e.g. "StartDate=...&EndDate=...").
+
+        Raises:
+            APIError: On non-200 response or request failure.
+
+        Returns:
+            Parsed JSON response.
+
+        """
+        return self._post(path, content=body)
+
     def post_datatables(self, path: str, body: str) -> list[dict[str, Any]]:
         """POST a DataTables form-encoded body and return the data array.
 

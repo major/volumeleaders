@@ -94,6 +94,7 @@ def test_client_request_paths_and_lifecycle(
     request_headers = vars(type(client))["_request_headers"]
     assert request_headers(client)["x-requested-with"] == "XMLHttpRequest"
     assert client.post_json("/json", {"value": 1}) == {"ok": True}
+    assert client.post_form("/form", "StartDate=2026-01-01") == {"ok": True}
     assert client.post_datatables_raw("/table", "draw=1") == {"ok": True}
 
     http_mock.post.side_effect = httpx.ConnectError("offline")
@@ -169,6 +170,9 @@ def test_mcp_utility_error_and_data_paths(
     assert len(_utils.ninety_days_ago_date_string()) == _DATE_LENGTH
     assert _utils.format_date(None) is None
     assert _utils.format_date(datetime(2026, 4, 1, tzinfo=UTC)) == "2026-04-01"
+    assert _utils.format_datekey_to_iso(20260819) == "2026-08-19"
+    assert _utils.format_datekey_to_iso("20260819") == "2026-08-19"
+    assert _utils.format_datekey_to_iso("invalid") == "invalid"
     assert _utils.curate_exhaustion(_models_from_payload(sample_exhaustion_response))[
         "date_key"
     ]

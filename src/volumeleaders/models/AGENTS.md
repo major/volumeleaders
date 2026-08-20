@@ -16,6 +16,8 @@ earnings.py      # Earnings (9 fields, simplest model)
 exhaustion.py    # ExhaustionScore (5 fields)
 watchlist.py     # WatchListTicker, WatchListConfig (86 lines, most filter fields)
 alerts.py        # AlertConfig, TradeAlert, TradeClusterAlert(TradeCluster)
+sector.py        # SectorBreakdown, InstitutionalOutlier, SectorThemeNotional, SupplyDemandArea, SectorDailyReturn
+darkpool.py      # DarkPoolVolumeBin
 ```
 
 ## WHERE TO LOOK
