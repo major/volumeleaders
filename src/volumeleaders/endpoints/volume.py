@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders.models import InstitutionalVolume, TotalVolume
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 INSTITUTIONAL_VOLUME_COLUMNS = [
     "Ticker",
@@ -33,7 +37,7 @@ TOTAL_VOLUME_COLUMNS = [
 ]
 
 
-def _get_institutional_volume(
+def _get_institutional_volume(  # noqa: PLR0913
     client: VolumeLeadersClient,
     path: str,
     *,

@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from fastmcp import Client
 
 _mcp_module = import_module("volumeleaders.mcp")
 _tools = import_module("volumeleaders.mcp.tools.trade_level_touches")
@@ -15,9 +16,21 @@ _models = import_module("volumeleaders.models")
 trade_level_touches_tool = _tools.trade_level_touches
 TradeLevelTouch = _models.TradeLevelTouch
 
-_curate_touch = _tools._curate_touch
-_format_time = _tools._format_time
-_resolve_filters = _tools._resolve_filters
+_curate_touch = vars(_tools)["_curate_touch"]
+_format_time = vars(_tools)["_format_time"]
+_resolve_filters = vars(_tools)["_resolve_filters"]
+
+_DATE_LENGTH = 10
+_BROAD_RELATIVE_SIZE = 5
+_BROAD_RANK = 5
+_BROAD_MIN_DOLLARS = 500_000_000
+_TICKER_RANK = 10
+_TICKER_MIN_DOLLARS = 500_000
+_EXPLICIT_RELATIVE_SIZE = 2
+_EXPLICIT_RANK = 20
+_EXPLICIT_MIN_DOLLARS = 1_000_000
+_PARTIAL_RELATIVE_SIZE = 3
+_TOTAL_AVAILABLE = 1705
 
 
 def _make_touches(
@@ -118,8 +131,8 @@ def test_curate_touch_level_dates(
     # formatted as YYYY-MM-DD strings.
     assert result["level_origin_date"] is not None
     assert result["level_last_confirmed"] is not None
-    assert len(result["level_origin_date"]) == 10
-    assert len(result["level_last_confirmed"]) == 10
+    assert len(result["level_origin_date"]) == _DATE_LENGTH
+    assert len(result["level_last_confirmed"]) == _DATE_LENGTH
 
 
 def test_curate_touch_omits_removed_fields(
@@ -150,9 +163,9 @@ def test_resolve_filters_broad_scan_defaults() -> None:
         min_dollars=None,
     )
 
-    assert rs == 5
-    assert tlr == 5
-    assert md == 500_000_000
+    assert rs == _BROAD_RELATIVE_SIZE
+    assert tlr == _BROAD_RANK
+    assert md == _BROAD_MIN_DOLLARS
 
 
 def test_resolve_filters_ticker_defaults() -> None:
@@ -165,36 +178,36 @@ def test_resolve_filters_ticker_defaults() -> None:
     )
 
     assert rs == 0
-    assert tlr == 10
-    assert md == 500_000
+    assert tlr == _TICKER_RANK
+    assert md == _TICKER_MIN_DOLLARS
 
 
 def test_resolve_filters_explicit_values_win() -> None:
     """Explicit values override both default sets."""
     rs, tlr, md = _resolve_filters(
         tickers="",
-        relative_size=2,
-        trade_level_rank=20,
-        min_dollars=1_000_000,
+        relative_size=_EXPLICIT_RELATIVE_SIZE,
+        trade_level_rank=_EXPLICIT_RANK,
+        min_dollars=_EXPLICIT_MIN_DOLLARS,
     )
 
-    assert rs == 2
-    assert tlr == 20
-    assert md == 1_000_000
+    assert rs == _EXPLICIT_RELATIVE_SIZE
+    assert tlr == _EXPLICIT_RANK
+    assert md == _EXPLICIT_MIN_DOLLARS
 
 
 def test_resolve_filters_partial_override() -> None:
     """Mix of explicit and default values resolves correctly."""
     rs, tlr, md = _resolve_filters(
         tickers="AAPL",
-        relative_size=3,
+        relative_size=_PARTIAL_RELATIVE_SIZE,
         trade_level_rank=None,
         min_dollars=None,
     )
 
-    assert rs == 3
-    assert tlr == 10
-    assert md == 500_000
+    assert rs == _PARTIAL_RELATIVE_SIZE
+    assert tlr == _TICKER_RANK
+    assert md == _TICKER_MIN_DOLLARS
 
 
 # -- Tool integration tests ----------------------------------------------------
@@ -203,11 +216,11 @@ def test_resolve_filters_partial_override() -> None:
 def test_envelope_shape_default(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return minimal envelope by default: data and metadata only."""
     touches = _make_touches(sample_trade_level_touch_response)
-    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *a, **kw: touches)
+    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: touches)
 
     result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
 
@@ -220,11 +233,11 @@ def test_envelope_shape_default(
 def test_envelope_omits_warnings_when_empty(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Omit the warnings key entirely when there are no warnings."""
     touches = _make_touches(sample_trade_level_touch_response)
-    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *a, **kw: touches)
+    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: touches)
 
     result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
 
@@ -233,7 +246,7 @@ def test_envelope_omits_warnings_when_empty(
 
 def test_envelope_includes_warnings_when_present(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Include warnings key when endpoint fails."""
     monkeypatch.setattr(
@@ -251,11 +264,11 @@ def test_envelope_includes_warnings_when_present(
 def test_curated_fields_in_response(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Curate touch rows to the expected compact field set in tool response."""
     touches = _make_touches(sample_trade_level_touch_response)
-    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *a, **kw: touches)
+    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: touches)
 
     result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
 
@@ -278,12 +291,12 @@ def test_curated_fields_in_response(
 def test_default_date_uses_today(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Use today's date when no date parameter is provided."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_touches(sample_trade_level_touch_response)
@@ -300,12 +313,12 @@ def test_default_date_uses_today(
 def test_explicit_date_used(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Use the provided date when explicitly passed."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_touches(sample_trade_level_touch_response)
@@ -320,7 +333,7 @@ def test_explicit_date_used(
 
 def test_endpoint_failure_returns_null_with_warning(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return touches as null with a warning when endpoint fails."""
     monkeypatch.setattr(
@@ -338,12 +351,12 @@ def test_endpoint_failure_returns_null_with_warning(
 def test_tickers_filter_passed_to_endpoint(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Pass ticker filter through to the endpoint function."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_touches(sample_trade_level_touch_response)
@@ -357,10 +370,10 @@ def test_tickers_filter_passed_to_endpoint(
 
 def test_empty_result_returns_empty_list(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return empty touches list when endpoint returns no rows."""
-    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *a, **kw: [])
+    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: [])
 
     result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
 
@@ -372,22 +385,22 @@ def test_empty_result_returns_empty_list(
 def test_metadata_counts(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_level_touch_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Include accurate count and total_available metadata."""
     touches = _make_touches(sample_trade_level_touch_response)
-    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *a, **kw: touches)
+    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: touches)
 
     result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
 
     assert result["metadata"]["touch_count"] == 1
     # TotalRows from fixture is 1705.
-    assert result["metadata"]["total_available"] == 1705
+    assert result["metadata"]["total_available"] == _TOTAL_AVAILABLE
 
 
 def test_metadata_null_on_failure(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return null metadata when endpoint fails."""
     monkeypatch.setattr(
@@ -408,7 +421,6 @@ async def test_fastmcp_client_transport(
     sample_trade_level_touch_response: dict[str, Any],
 ) -> None:
     """Call the registered tool through FastMCP client transport."""
-    from fastmcp import Client
 
     class _FakeClient:
         """Test client object used for lifespan initialization."""
@@ -417,7 +429,7 @@ async def test_fastmcp_client_transport(
             """Provide the close method expected by lifespan cleanup."""
 
     touches = _make_touches(sample_trade_level_touch_response)
-    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *a, **kw: touches)
+    monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: touches)
     monkeypatch.setattr(_mcp_module, "VolumeLeadersClient", _FakeClient)
 
     async with Client(_mcp_module.mcp) as client:

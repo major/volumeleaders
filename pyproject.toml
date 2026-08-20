@@ -27,6 +27,13 @@ volumeleaders-mcp = "volumeleaders.mcp:main"
 requires = ["uv_build>=0.11.2,<0.12.0"]
 build-backend = "uv_build"
 
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["ALL"]
+per-file-ignores = { "tests/**/*.py" = ["S101"] }
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",

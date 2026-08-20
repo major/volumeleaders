@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders.endpoints.trades import TRADE_CLUSTER_COLUMNS, TRADE_COLUMNS
 from volumeleaders.models import AlertConfig, TradeAlert, TradeClusterAlert
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 ALERT_CONFIG_COLUMNS = ["Name", "Name", "Tickers", "Conditions"]
 
@@ -38,7 +42,9 @@ def get_trade_alerts(client: VolumeLeadersClient, *, date: str) -> list[TradeAle
 
 
 def get_trade_cluster_alerts(
-    client: VolumeLeadersClient, *, date: str
+    client: VolumeLeadersClient,
+    *,
+    date: str,
 ) -> list[TradeClusterAlert]:
     """Return trade cluster alert rows for a single date."""
     request = DataTablesRequest(
@@ -50,6 +56,7 @@ def get_trade_cluster_alerts(
         custom_filters={"Date": date},
     )
     rows = client.post_datatables(
-        "/TradeClusterAlerts/GetTradeClusterAlerts", request.encode()
+        "/TradeClusterAlerts/GetTradeClusterAlerts",
+        request.encode(),
     )
     return [TradeClusterAlert.model_validate(row) for row in rows]

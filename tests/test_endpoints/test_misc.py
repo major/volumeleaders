@@ -39,12 +39,18 @@ def test_chart_endpoints_validate_fixture_models(
     client.post_datatables.return_value = sample_trade_level_response["data"]
 
     price_bars = _chart.get_price_data(
-        client, ticker="SPY", start_date="20260401", end_date="2026-04-01"
+        client,
+        ticker="SPY",
+        start_date="20260401",
+        end_date="2026-04-01",
     )
     snapshot = _chart.get_snapshot(client, ticker="SPY", date_key="2026-04-01")
     company = _chart.get_company(client, ticker="SPY")
     levels = _chart.get_chart_levels(
-        client, ticker="AMD", start_date="2026-04-01", end_date="2026-04-02"
+        client,
+        ticker="AMD",
+        start_date="2026-04-01",
+        end_date="2026-04-02",
     )
 
     assert isinstance(price_bars[0], _models.PriceBar)
@@ -61,7 +67,9 @@ def test_earnings_endpoint_validates_fixture(
     client.post_datatables.return_value = sample_earnings_response["data"]
 
     result = _earnings.get_earnings(
-        client, start_date="2026-04-01", end_date="2026-04-02"
+        client,
+        start_date="2026-04-01",
+        end_date="2026-04-02",
     )
 
     assert isinstance(result[0], _models.Earnings)
@@ -79,10 +87,16 @@ def test_level_endpoints_validate_fixtures(
     ]
 
     levels = _levels.get_trade_levels(
-        client, ticker="AMD", start_date="2026-04-01", end_date="2026-04-02"
+        client,
+        ticker="AMD",
+        start_date="2026-04-01",
+        end_date="2026-04-02",
     )
     touches = _levels.get_trade_level_touches(
-        client, tickers="WTID", start_date="2026-04-01", end_date="2026-04-02"
+        client,
+        tickers="WTID",
+        start_date="2026-04-01",
+        end_date="2026-04-02",
     )
 
     assert isinstance(levels[0], _models.TradeLevel)

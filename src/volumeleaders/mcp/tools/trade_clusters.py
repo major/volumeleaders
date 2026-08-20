@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastmcp import Context
 from fastmcp.dependencies import CurrentContext
 from pydantic import Field
 
+from volumeleaders._exceptions import APIError
 from volumeleaders.endpoints.trades import get_trade_clusters
 from volumeleaders.mcp import mcp
 from volumeleaders.mcp.utils import (
@@ -19,7 +19,14 @@ from volumeleaders.mcp.utils import (
     resolve_client,
     today_date_string,
 )
-from volumeleaders.models import TradeCluster
+
+_DECIMAL_PLACES = 2
+_DEFAULT_CONTEXT = CurrentContext()
+
+if TYPE_CHECKING:
+    from fastmcp import Context
+
+    from volumeleaders.models import TradeCluster
 
 
 def _format_time_range(cluster: TradeCluster) -> str:
@@ -72,7 +79,7 @@ def _curate_cluster(
         "dollars": format_dollars(cluster.dollars),
         "volume": cluster.volume,
         "rank": cluster.trade_cluster_rank,
-        "dollars_multiplier": round(cluster.dollars_multiplier, 2),
+        "dollars_multiplier": round(cluster.dollars_multiplier, _DECIMAL_PLACES),
         "cumulative_distribution": cluster.cumulative_distribution,
         "last_comparable_date": format_date(cluster.last_comparible_trade_cluster_date),
     }
@@ -107,7 +114,7 @@ def trade_clusters(
             description="Maximum number of results to return.",
         ),
     ] = 50,
-    ctx: Context = CurrentContext(),
+    ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
     """Find institutional trade clusters for a given day.
 
@@ -126,7 +133,7 @@ def trade_clusters(
       volume (values near 1.0 = among the largest clusters)
     - last_comparable_date: when a similar-sized cluster last occurred
     """
-    query_date = date if date else today_date_string()
+    query_date = date or today_date_string()
     warnings: list[str] = []
     client = resolve_client(ctx)
 
@@ -143,7 +150,7 @@ def trade_clusters(
         snapshots = fetch_snapshot_prices(client, warnings=warnings)
         clusters_data = [_curate_cluster(c, snapshots) for c in raw_clusters]
         total_count = raw_clusters[0].total_rows if raw_clusters else 0
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         capture_non_auth_error(warnings, "Failed to fetch trade clusters", error)
 
     result: dict[str, Any] = {}

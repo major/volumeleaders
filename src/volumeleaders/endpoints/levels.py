@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders.models import TradeLevel, TradeLevelTouch
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 TRADE_LEVEL_COLUMNS = [
     "Price",
@@ -34,7 +38,7 @@ TRADE_LEVEL_TOUCH_COLUMNS = [
 ]
 
 
-def get_trade_levels(
+def get_trade_levels(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     ticker: str,
@@ -78,7 +82,7 @@ def get_trade_levels(
     return [TradeLevel.model_validate(row) for row in rows]
 
 
-def get_trade_level_touches(
+def get_trade_level_touches(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     tickers: str = "",
@@ -119,6 +123,7 @@ def get_trade_level_touches(
         },
     )
     rows = client.post_datatables(
-        "/TradeLevelTouches/GetTradeLevelTouches", request.encode()
+        "/TradeLevelTouches/GetTradeLevelTouches",
+        request.encode(),
     )
     return [TradeLevelTouch.model_validate(row) for row in rows]

@@ -74,7 +74,7 @@ class TradeAlert(VLBaseModel):
     last_comparible_trade_date: AspNetDate = Field(alias="LastComparibleTradeDate")
     offsetting_trade_date: AspNetDate = Field(alias="OffsettingTradeDate")
     phantom_print_fulfillment_date: AspNetDate = Field(
-        alias="PhantomPrintFulfillmentDate"
+        alias="PhantomPrintFulfillmentDate",
     )
     full_date_time: str = Field(alias="FullDateTime")
     ipo_date: AspNetDate = Field(alias="IPODate")

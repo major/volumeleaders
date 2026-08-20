@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders.models import ExhaustionScore
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 
 def get_exhaustion_scores(
-    client: VolumeLeadersClient, date: str = ""
+    client: VolumeLeadersClient,
+    date: str = "",
 ) -> ExhaustionScore:
     """Return exhaustion score ranks for a given date.
 
@@ -17,6 +22,7 @@ def get_exhaustion_scores(
 
     Returns:
         Exhaustion score model for the requested day.
+
     """
     payload = {"Date": date}
     response = client.post_json("/ExecutiveSummary/GetExhaustionScores", payload)

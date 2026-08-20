@@ -12,7 +12,7 @@ class WatchListTicker(VLBaseModel):
     price: float = Field(alias="Price")
     nearest_top10_trade_date: AspNetDate = Field(alias="NearestTop10TradeDate")
     nearest_top10_trade_cluster_date: AspNetDate = Field(
-        alias="NearestTop10TradeClusterDate"
+        alias="NearestTop10TradeClusterDate",
     )
     nearest_top10_trade_level: float | None = Field(alias="NearestTop10TradeLevel")
 
@@ -38,10 +38,10 @@ class WatchListConfig(VLBaseModel):
     rsi_oversold_daily: int | None = Field(alias="RSIOversoldDaily")
     conditions: str = Field(alias="Conditions")
     rsi_overbought_hourly_selected: bool | None = Field(
-        alias="RSIOverboughtHourlySelected"
+        alias="RSIOverboughtHourlySelected",
     )
     rsi_overbought_daily_selected: bool | None = Field(
-        alias="RSIOverboughtDailySelected"
+        alias="RSIOverboughtDailySelected",
     )
     rsi_oversold_hourly_selected: bool | None = Field(alias="RSIOversoldHourlySelected")
     rsi_oversold_daily_selected: bool | None = Field(alias="RSIOversoldDailySelected")

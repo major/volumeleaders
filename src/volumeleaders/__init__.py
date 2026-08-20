@@ -1,5 +1,7 @@
 """Public package exports for the VolumeLeaders client."""
 
+import sys
+
 from volumeleaders._client import VolumeLeadersClient
 from volumeleaders.endpoints import (
     get_ah_institutional_volume,
@@ -97,4 +99,6 @@ __all__ = [
 
 def main() -> None:
     """Entrypoint placeholder for local CLI invocation."""
-    print("Use VolumeLeadersClient and endpoint functions from this package.")
+    sys.stdout.write(
+        "Use VolumeLeadersClient and endpoint functions from this package.\n",
+    )

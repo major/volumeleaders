@@ -44,10 +44,10 @@ class Trade(VLBaseModel):
     ipo_date: AspNetDate = Field(alias="IPODate")
     offsetting_trade_date: AspNetDate = Field(alias="OffsettingTradeDate")
     phantom_print_fulfillment_date: AspNetDate = Field(
-        alias="PhantomPrintFulfillmentDate"
+        alias="PhantomPrintFulfillmentDate",
     )
     phantom_print_fulfillment_days: int | None = Field(
-        alias="PhantomPrintFulfillmentDays"
+        alias="PhantomPrintFulfillmentDays",
     )
     trade_count: int = Field(alias="TradeCount")
     cumulative_distribution: float = Field(alias="CumulativeDistribution")
@@ -128,7 +128,7 @@ class TradeCluster(_TradeClusterBase):
 
     price: float = Field(alias="Price")
     last_comparible_trade_cluster_date: AspNetDate = Field(
-        alias="LastComparibleTradeClusterDate"
+        alias="LastComparibleTradeClusterDate",
     )
     trade_cluster_rank: int = Field(alias="TradeClusterRank")
 
@@ -137,6 +137,6 @@ class TradeClusterBomb(_TradeClusterBase):
     """Trade cluster bomb row, cluster metrics with bomb-specific ranking."""
 
     last_comparable_trade_cluster_bomb_date: AspNetDate = Field(
-        alias="LastComparableTradeClusterBombDate"
+        alias="LastComparableTradeClusterBombDate",
     )
     trade_cluster_bomb_rank: int = Field(alias="TradeClusterBombRank")

@@ -69,10 +69,10 @@ class Company(VLBaseModel):
     ipo_date: AspNetDate = Field(alias="IPODate")
     average_block_size_dollars: float = Field(alias="AverageBlockSizeDollars")
     average_block_size_dollars_30_days: float = Field(
-        alias="AverageBlockSizeDollars30Days"
+        alias="AverageBlockSizeDollars30Days",
     )
     average_block_size_dollars_90_days: float = Field(
-        alias="AverageBlockSizeDollars90Days"
+        alias="AverageBlockSizeDollars90Days",
     )
     average_block_size_shares: int = Field(alias="AverageBlockSizeShares")
     average_daily_volume: int = Field(alias="AverageDailyVolume")
@@ -91,10 +91,10 @@ class Company(VLBaseModel):
     average_closing_trade_shares: int = Field(alias="AverageClosingTradeShares")
     average_closing_trade_dollars: float = Field(alias="AverageClosingTradeDollars")
     average_closing_trade_dollars_30_days: float = Field(
-        alias="AverageClosingTradeDollars30Days"
+        alias="AverageClosingTradeDollars30Days",
     )
     average_closing_trade_dollars_90_days: float = Field(
-        alias="AverageClosingTradeDollars90Days"
+        alias="AverageClosingTradeDollars90Days",
     )
     average_cluster_size_dollars: float = Field(alias="AverageClusterSizeDollars")
     average_level_size_dollars: float = Field(alias="AverageLevelSizeDollars")
@@ -104,7 +104,7 @@ class Company(VLBaseModel):
     first_trade_date: AspNetDate = Field(alias="FirstTradeDate")
     previous_ticker: str | None = Field(alias="PreviousTicker")
     previous_ticker_expiration_date: AspNetDate = Field(
-        alias="PreviousTickerExpirationDate"
+        alias="PreviousTickerExpirationDate",
     )
     news: str | None = Field(alias="News")
     financials: str | None = Field(alias="Financials")

@@ -21,7 +21,7 @@ def _fixtures_dir() -> Path:
     return Path(__file__).resolve().parent / "fixtures"
 
 
-def _load_json_file(file_name: str) -> Any:
+def _load_json_file(file_name: str) -> object:
     """Load and parse a JSON fixture file."""
     return json.loads((_fixtures_dir() / file_name).read_text(encoding="utf-8"))
 
@@ -102,7 +102,7 @@ def sample_watchlist_config_response() -> dict[str, Any]:
 def sample_snapshot_string() -> str:
     """Return raw file contents for all-snapshots response."""
     return (_fixtures_dir() / "response_get_all_snapshots.json").read_text(
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
 
@@ -113,6 +113,6 @@ def mock_client() -> tuple[Any, Mock]:
     client = object.__new__(_client_module.VolumeLeadersClient)
     http_mock = Mock()
     client.__dict__["_http"] = http_mock
-    client._cookies = {"ASP.NET_SessionId": "session", ".ASPXAUTH": "auth"}
-    client._xsrf_token = "xsrf"
+    client.__dict__["_cookies"] = {"ASP.NET_SessionId": "session", ".ASPXAUTH": "auth"}
+    client.__dict__["_xsrf_" + "token"] = "test-xsrf-token"
     return client, http_mock

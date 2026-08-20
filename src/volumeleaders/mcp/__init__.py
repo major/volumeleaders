@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from fastmcp import FastMCP
 
 from volumeleaders._client import VolumeLeadersClient
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # When fastmcp loads this file by path (e.g. fastmcp run __init__.py:mcp),
 # it gets a different module identity than the installed package's

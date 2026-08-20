@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastmcp import Context
 from fastmcp.dependencies import CurrentContext
 from pydantic import Field
 
+from volumeleaders._exceptions import APIError
 from volumeleaders.endpoints.trades import get_trades
 from volumeleaders.mcp import mcp
 from volumeleaders.mcp.utils import (
@@ -21,11 +21,19 @@ from volumeleaders.mcp.utils import (
     resolve_client,
     today_date_string,
 )
-from volumeleaders.models import Trade
+
+_DEFAULT_CONTEXT = CurrentContext()
+
+if TYPE_CHECKING:
+    from fastmcp import Context
+
+    from volumeleaders.models import Trade
 
 # Per-ticker defaults: permissive filters, wider lookback.
 _TICKER_INCLUDE_PHANTOM = 1
 _TICKER_INCLUDE_OFFSETTING = 1
+_TIME_PARTS = 2
+_DECIMAL_PLACES = 2
 
 # Broad-scan defaults: tighter filters, today only.
 _BROAD_INCLUDE_PHANTOM = -1
@@ -59,7 +67,7 @@ def _resolve_dates(
     Broad scans (no tickers) default to today only.
     Explicit caller values always win.
     """
-    eff_end = end_date if end_date else today_date_string()
+    eff_end = end_date or today_date_string()
     if start_date:
         eff_start = start_date
     elif tickers:
@@ -91,7 +99,7 @@ def _format_time(trade: Trade) -> str:
         return trade.full_time_string24[:5]
     if trade.full_date_time:
         parts = trade.full_date_time.split("T", maxsplit=1)
-        return parts[1][:5] if len(parts) == 2 else trade.full_date_time
+        return parts[1][:5] if len(parts) == _TIME_PARTS else trade.full_date_time
     return ""
 
 
@@ -118,7 +126,7 @@ def _collect_trade_types(trade: Trade) -> list[str]:
         types.append("closing")
     if trade.phantom_print:
         types.append("phantom")
-    return types if types else ["block"]
+    return types or ["block"]
 
 
 def _curate_trade(
@@ -172,7 +180,7 @@ def _curate_trade(
         "dollars": format_dollars(trade.dollars),
         "volume": trade.volume,
         "trade_rank": trade.trade_rank,
-        "dollars_multiplier": round(trade.dollars_multiplier, 2),
+        "dollars_multiplier": round(trade.dollars_multiplier, _DECIMAL_PLACES),
         "cumulative_distribution": trade.cumulative_distribution,
         "trade_count": trade.trade_count,
         "types": _collect_trade_types(trade),
@@ -182,7 +190,7 @@ def _curate_trade(
 
 
 @mcp.tool
-def trades(
+def trades(  # noqa: PLR0913
     tickers: Annotated[
         str,
         Field(
@@ -267,7 +275,7 @@ def trades(
             description="Maximum number of results to return.",
         ),
     ] = 50,
-    ctx: Context = CurrentContext(),
+    ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
     """Look up institutional block trades across all tickers or for specific symbols.
 
@@ -336,7 +344,7 @@ def trades(
         snapshots = fetch_snapshot_prices(client, warnings=warnings)
         trades_data = [_curate_trade(t, snapshots) for t in raw_trades]
         total_count = raw_trades[0].total_rows if raw_trades else 0
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         capture_non_auth_error(warnings, "Failed to fetch trades", error)
 
     result: dict[str, Any] = {}

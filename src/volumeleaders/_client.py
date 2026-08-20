@@ -4,12 +4,15 @@ Manages auth state (cookies + XSRF token) and provides base request
 methods that endpoint modules build on.
 """
 
-from typing import Any
+from http import HTTPStatus
+from typing import Any, Self, cast
 
 import httpx
 
 from volumeleaders._auth import BASE_URL, USER_AGENT, extract_cookies, fetch_xsrf_token
 from volumeleaders._exceptions import APIError
+
+JSONResponse = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 
 class VolumeLeadersClient:
@@ -21,6 +24,7 @@ class VolumeLeadersClient:
     Args:
         browser: Browser to extract cookies from (default: "firefox").
         timeout: HTTP request timeout in seconds (default: 30.0).
+
     """
 
     def __init__(self, browser: str = "firefox", timeout: float = 60.0) -> None:
@@ -37,7 +41,7 @@ class VolumeLeadersClient:
         """Close the underlying HTTP client."""
         self._http.close()
 
-    def __enter__(self) -> "VolumeLeadersClient":
+    def __enter__(self) -> Self:
         """Support use as a context manager."""
         return self
 
@@ -59,7 +63,7 @@ class VolumeLeadersClient:
         *,
         json: dict[str, Any] | None = None,
         content: str | None = None,
-    ) -> Any:
+    ) -> JSONResponse:
         """Send a POST request and return parsed JSON.
 
         Centralizes error wrapping and status code validation for all
@@ -75,6 +79,7 @@ class VolumeLeadersClient:
 
         Returns:
             Parsed JSON response.
+
         """
         headers = {**self._request_headers()}
         if content is not None:
@@ -91,17 +96,19 @@ class VolumeLeadersClient:
                 cookies=self._cookies,
             )
         except httpx.HTTPError as exc:
-            raise APIError(f"Request to {path} failed: {exc}") from exc
+            msg = f"Request to {path} failed: {exc}"
+            raise APIError(msg) from exc
 
-        if resp.status_code != 200:
+        if resp.status_code != HTTPStatus.OK:
+            msg = f"{path} returned HTTP {resp.status_code}: {resp.text[:200]}"
             raise APIError(
-                f"{path} returned HTTP {resp.status_code}: {resp.text[:200]}",
+                msg,
                 status_code=resp.status_code,
             )
 
         return resp.json()
 
-    def post_json(self, path: str, payload: dict[str, Any]) -> Any:
+    def post_json(self, path: str, payload: dict[str, Any]) -> JSONResponse:
         """POST a JSON body and return the parsed response.
 
         Used by simple JSON endpoints like GetExhaustionScores, GetCompany,
@@ -116,6 +123,7 @@ class VolumeLeadersClient:
 
         Returns:
             Parsed JSON response (dict, list, or string depending on endpoint).
+
         """
         return self._post(path, json=payload)
 
@@ -133,12 +141,14 @@ class VolumeLeadersClient:
 
         Returns:
             List of row dicts from the "data" array in the response.
+
         """
         result = self._post(path, content=body)
         if isinstance(result, dict) and "data" in result:
             return result["data"]
 
-        raise APIError(f"Unexpected response format from {path}: missing 'data' key")
+        msg = f"Unexpected response format from {path}: missing 'data' key"
+        raise APIError(msg)
 
     def post_datatables_raw(self, path: str, body: str) -> dict[str, Any]:
         """POST a DataTables form-encoded body and return the full response.
@@ -155,5 +165,6 @@ class VolumeLeadersClient:
 
         Returns:
             Full response dict with "data", "recordsTotal", "recordsFiltered".
+
         """
-        return self._post(path, content=body)
+        return cast("dict[str, Any]", self._post(path, content=body))

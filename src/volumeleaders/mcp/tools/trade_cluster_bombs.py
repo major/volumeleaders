@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastmcp import Context
 from fastmcp.dependencies import CurrentContext
 from pydantic import Field
 
+from volumeleaders._exceptions import APIError
 from volumeleaders.endpoints.trades import get_trade_cluster_bombs
 from volumeleaders.mcp import mcp
 from volumeleaders.mcp.utils import (
@@ -20,7 +20,14 @@ from volumeleaders.mcp.utils import (
     resolve_client,
     today_date_string,
 )
-from volumeleaders.models import TradeClusterBomb
+
+_DECIMAL_PLACES = 2
+_DEFAULT_CONTEXT = CurrentContext()
+
+if TYPE_CHECKING:
+    from fastmcp import Context
+
+    from volumeleaders.models import TradeClusterBomb
 
 
 def _format_time_range(bomb: TradeClusterBomb) -> str:
@@ -73,10 +80,10 @@ def _curate_bomb(
         "dollars": format_dollars(bomb.dollars),
         "volume": bomb.volume,
         "rank": bomb.trade_cluster_bomb_rank,
-        "dollars_multiplier": round(bomb.dollars_multiplier, 2),
+        "dollars_multiplier": round(bomb.dollars_multiplier, _DECIMAL_PLACES),
         "cumulative_distribution": bomb.cumulative_distribution,
         "last_comparable_date": format_date(
-            bomb.last_comparable_trade_cluster_bomb_date
+            bomb.last_comparable_trade_cluster_bomb_date,
         ),
     }
 
@@ -113,7 +120,7 @@ def trade_cluster_bombs(
             description="Maximum number of results to return.",
         ),
     ] = 50,
-    ctx: Context = CurrentContext(),
+    ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
     """Find trade cluster bomb events over a date range.
 
@@ -136,8 +143,8 @@ def trade_cluster_bombs(
     - last_comparable_date: when a comparable cluster bomb last
       occurred for this ticker
     """
-    eff_start = start_date if start_date else one_week_ago_date_string()
-    eff_end = end_date if end_date else today_date_string()
+    eff_start = start_date or one_week_ago_date_string()
+    eff_end = end_date or today_date_string()
     warnings: list[str] = []
     client = resolve_client(ctx)
 
@@ -154,7 +161,7 @@ def trade_cluster_bombs(
         snapshots = fetch_snapshot_prices(client, warnings=warnings)
         bombs_data = [_curate_bomb(b, snapshots) for b in raw_bombs]
         total_count = raw_bombs[0].total_rows if raw_bombs else 0
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         capture_non_auth_error(warnings, "Failed to fetch trade cluster bombs", error)
 
     result: dict[str, Any] = {}

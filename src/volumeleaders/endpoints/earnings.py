@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders.models import Earnings
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 EARNINGS_COLUMNS = [
     "Date",
@@ -20,7 +24,10 @@ EARNINGS_COLUMNS = [
 
 
 def get_earnings(
-    client: VolumeLeadersClient, *, start_date: str, end_date: str
+    client: VolumeLeadersClient,
+    *,
+    start_date: str,
+    end_date: str,
 ) -> list[Earnings]:
     """Return earnings rows within a date range."""
     request = DataTablesRequest(

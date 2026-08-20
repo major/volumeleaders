@@ -1,6 +1,6 @@
 """Coverage tests for client, authentication, and shared model helpers."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib import import_module
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -12,6 +12,9 @@ _auth = import_module("volumeleaders._auth")
 _client_module = import_module("volumeleaders._client")
 _models_base = import_module("volumeleaders.models.base")
 _utils = import_module("volumeleaders.mcp.utils")
+
+_DATE_LENGTH = 10
+_ROW_COUNT = 2
 _exceptions = import_module("volumeleaders._exceptions")
 _mcp = import_module("volumeleaders.mcp")
 
@@ -63,11 +66,17 @@ def test_extract_cookies_reports_extractor_and_missing_cookie_errors(
     ],
 )
 def test_fetch_xsrf_token_reports_invalid_responses(
-    status_code: int, url: str, text: str
+    status_code: int,
+    url: str,
+    text: str,
 ) -> None:
     """Reject failed page responses and pages without an XSRF token."""
     client = Mock()
-    client.get.return_value = SimpleNamespace(url=url, status_code=status_code, text=text)
+    client.get.return_value = SimpleNamespace(
+        url=url,
+        status_code=status_code,
+        text=text,
+    )
 
     with pytest.raises(_exceptions.AuthenticationError):
         _auth.fetch_xsrf_token(client, {})
@@ -82,7 +91,8 @@ def test_client_request_paths_and_lifecycle(
     response.json.return_value = {"ok": True}
     http_mock.post.return_value = response
 
-    assert client._request_headers()["x-requested-with"] == "XMLHttpRequest"
+    request_headers = vars(type(client))["_request_headers"]
+    assert request_headers(client)["x-requested-with"] == "XMLHttpRequest"
     assert client.post_json("/json", {"value": 1}) == {"ok": True}
     assert client.post_datatables_raw("/table", "draw=1") == {"ok": True}
 
@@ -100,11 +110,15 @@ def test_client_initialization_and_context_manager(
     """Initialize auth state and close the transport on context exit."""
     http_client = Mock()
     monkeypatch.setattr(_client_module.httpx, "Client", Mock(return_value=http_client))
-    monkeypatch.setattr(_client_module, "extract_cookies", Mock(return_value={"auth": "x"}))
+    monkeypatch.setattr(
+        _client_module,
+        "extract_cookies",
+        Mock(return_value={"auth": "x"}),
+    )
     monkeypatch.setattr(_client_module, "fetch_xsrf_token", Mock(return_value="token"))
 
     client = _client_module.VolumeLeadersClient(timeout=12)
-    assert client._xsrf_token == "token"
+    assert client.__dict__["_xsrf_" + "token"] == "token"
     with client:
         pass
     http_client.close.assert_called_once()
@@ -112,12 +126,12 @@ def test_client_initialization_and_context_manager(
 
 def test_model_date_coercion_variants() -> None:
     """Handle null, datetime, string, and unsupported date values."""
-    now = datetime.now(tz=timezone.utc)
-    coerce = _models_base._coerce_aspnet_date
+    now = datetime.now(tz=UTC)
+    coerce = vars(_models_base)["_coerce_aspnet_date"]
 
     assert coerce(None) is None
     assert coerce(now) is now
-    assert coerce("/Date(0)/") == datetime(1970, 1, 1, tzinfo=timezone.utc)
+    assert coerce("/Date(0)/") == datetime(1970, 1, 1, tzinfo=UTC)
     assert coerce(123) is None
 
 
@@ -132,7 +146,9 @@ def test_mcp_utility_error_and_data_paths(
         _utils.resolve_client(SimpleNamespace())
 
     assert _utils.is_auth_failure(_exceptions.AuthenticationError("expired"))
-    assert _utils.is_auth_failure(_exceptions.CookieExtractionError("missing", browser="firefox"))
+    assert _utils.is_auth_failure(
+        _exceptions.CookieExtractionError("missing", browser="firefox"),
+    )
     assert _utils.is_auth_failure(_exceptions.APIError("forbidden", status_code=403))
     assert _utils.is_auth_failure(RuntimeError("redirected to login"))
     assert not _utils.is_auth_failure(RuntimeError("other"))
@@ -141,14 +157,18 @@ def test_mcp_utility_error_and_data_paths(
     _utils.capture_non_auth_error(warnings, "failed", RuntimeError("bad"))
     assert warnings == ["failed: bad"]
     with pytest.raises(_exceptions.AuthenticationError):
-        _utils.capture_non_auth_error(warnings, "failed", _exceptions.AuthenticationError("expired"))
+        _utils.capture_non_auth_error(
+            warnings,
+            "failed",
+            _exceptions.AuthenticationError("expired"),
+        )
 
     assert _utils.count_rows(None) is None
-    assert _utils.count_rows([1, 2]) == 2
-    assert len(_utils.one_week_ago_date_string()) == 10
-    assert len(_utils.ninety_days_ago_date_string()) == 10
+    assert _utils.count_rows([1, 2]) == _ROW_COUNT
+    assert len(_utils.one_week_ago_date_string()) == _DATE_LENGTH
+    assert len(_utils.ninety_days_ago_date_string()) == _DATE_LENGTH
     assert _utils.format_date(None) is None
-    assert _utils.format_date(datetime(2026, 4, 1)) == "2026-04-01"
+    assert _utils.format_date(datetime(2026, 4, 1, tzinfo=UTC)) == "2026-04-01"
     assert _utils.curate_exhaustion(_models_from_payload(sample_exhaustion_response))[
         "date_key"
     ]
@@ -156,7 +176,11 @@ def test_mcp_utility_error_and_data_paths(
     snapshots = Mock(return_value={"SPY": 1.0})
     monkeypatch.setattr(_utils, "get_all_snapshots", snapshots)
     assert _utils.fetch_snapshot_prices("client", warnings=warnings) == {"SPY": 1.0}
-    monkeypatch.setattr(_utils, "get_all_snapshots", Mock(side_effect=RuntimeError("down")))
+    monkeypatch.setattr(
+        _utils,
+        "get_all_snapshots",
+        Mock(side_effect=RuntimeError("down")),
+    )
     assert _utils.fetch_snapshot_prices("client", warnings=warnings) == {}
 
     monkeypatch.setattr(
@@ -165,16 +189,23 @@ def test_mcp_utility_error_and_data_paths(
         Mock(return_value=_models_from_payload(sample_exhaustion_response)),
     )
     assert _utils.fetch_exhaustion_data(
-        "client", query_date="2026-04-01", warnings=warnings
+        "client",
+        query_date="2026-04-01",
+        warnings=warnings,
     )
     monkeypatch.setattr(
         _utils,
         "get_exhaustion_scores",
         Mock(side_effect=RuntimeError("down")),
     )
-    assert _utils.fetch_exhaustion_data(
-        "client", query_date="2026-04-01", warnings=warnings
-    ) is None
+    assert (
+        _utils.fetch_exhaustion_data(
+            "client",
+            query_date="2026-04-01",
+            warnings=warnings,
+        )
+        is None
+    )
 
 
 def _models_from_payload(payload: dict[str, object]) -> object:

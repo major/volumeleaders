@@ -78,6 +78,8 @@ tests/                       # Mirrors src/ layout, real API payloads as fixture
 uv run pre-commit run --all-files  # lint, typecheck, complexity, and coverage checks
 ```
 
+Run tests and lint checks through pre-commit rather than invoking pytest or Ruff directly.
+
 ## NOTES
 
 - CI runs on GitHub Actions (`.github/workflows/ci.yml`) through pre-commit.

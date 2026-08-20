@@ -14,7 +14,7 @@ class DataTablesRequest:
     order_column_index: int = 0
     order_direction: str = "desc"
     custom_filters: dict[str, str | int | float | bool | None] = field(
-        default_factory=dict
+        default_factory=dict,
     )
     draw: int = 1
 

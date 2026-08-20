@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders.models import WatchListConfig, WatchListTicker
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 WATCHLIST_TICKER_COLUMNS = [
     "Ticker",
@@ -19,7 +23,9 @@ WATCHLIST_CONFIG_COLUMNS = ["Name", "Name", "Tickers", "Criteria"]
 
 
 def get_watchlist_tickers(
-    client: VolumeLeadersClient, *, watchlist_key: int = -1
+    client: VolumeLeadersClient,
+    *,
+    watchlist_key: int = -1,
 ) -> list[WatchListTicker]:
     """Return tickers for a selected watch list."""
     request = DataTablesRequest(

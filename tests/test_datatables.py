@@ -5,6 +5,8 @@ from urllib.parse import parse_qs
 
 DataTablesRequest = import_module("volumeleaders._datatables").DataTablesRequest
 
+_DEFAULT_LENGTH = 50
+
 
 def test_encode_contains_columns_pagination_and_ordering() -> None:
     """Encode DataTables fields into a valid URL-encoded body string."""
@@ -53,7 +55,7 @@ def test_default_values_are_applied() -> None:
 
     assert parsed["draw"] == ["1"]
     assert parsed["start"] == ["0"]
-    assert parsed["length"] == ["50"]
+    assert parsed["length"] == [str(_DEFAULT_LENGTH)]
 
 
 def test_to_form_data_returns_expected_structure() -> None:
@@ -67,7 +69,7 @@ def test_to_form_data_returns_expected_structure() -> None:
 
     assert form_data["draw"] == 1
     assert form_data["start"] == 0
-    assert form_data["length"] == 50
+    assert form_data["length"] == _DEFAULT_LENGTH
     assert form_data["columns[0][data]"] == "Ticker"
     assert form_data["columns[0][searchable]"] == "true"
     assert form_data["columns[0][orderable]"] == "true"

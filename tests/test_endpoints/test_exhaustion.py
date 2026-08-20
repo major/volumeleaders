@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import Mock
 
 get_exhaustion_scores = import_module(
-    "volumeleaders.endpoints.exhaustion"
+    "volumeleaders.endpoints.exhaustion",
 ).get_exhaustion_scores
 
 

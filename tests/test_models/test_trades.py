@@ -9,6 +9,9 @@ Trade = _models.Trade
 TradeCluster = _models.TradeCluster
 TradeClusterBomb = _models.TradeClusterBomb
 
+_UNRANKED = 9999
+_BOMB_RANK = 2
+
 
 def test_trade_model_validates_real_trade_response(
     sample_trade_response: dict[str, Any],
@@ -18,7 +21,7 @@ def test_trade_model_validates_real_trade_response(
     trade = Trade.model_validate(row)
 
     assert trade.ticker == "SPY"
-    assert trade.trade_rank == 9999
+    assert trade.trade_rank == _UNRANKED
     assert trade.dark_pool
     assert trade.dollars > 0
     assert isinstance(trade.last_comparible_trade_date, datetime)
@@ -32,7 +35,7 @@ def test_trade_cluster_model_validates_real_cluster_response(
     cluster = TradeCluster.model_validate(row)
 
     assert cluster.trade_count > 0
-    assert cluster.trade_cluster_rank == 9999
+    assert cluster.trade_cluster_rank == _UNRANKED
     assert "T" in cluster.min_full_date_time
     assert "T" in cluster.max_full_date_time
 
@@ -46,7 +49,7 @@ def test_trade_cluster_bomb_model_validates_real_bomb_response(
 
     assert bomb.ticker == "NVS"
     assert bomb.trade_count > 0
-    assert bomb.trade_cluster_bomb_rank == 2
+    assert bomb.trade_cluster_bomb_rank == _BOMB_RANK
     assert bomb.dollars > 0
     assert isinstance(bomb.last_comparable_trade_cluster_bomb_date, datetime)
     assert "T" in bomb.min_full_date_time

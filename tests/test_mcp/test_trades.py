@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from fastmcp import Client
 
 _mcp_module = import_module("volumeleaders.mcp")
 _tools = import_module("volumeleaders.mcp.tools.trades")
@@ -15,11 +16,27 @@ _models = import_module("volumeleaders.models")
 trades_tool = _tools.trades
 Trade = _models.Trade
 
-_curate_trade = _tools._curate_trade
-_format_time = _tools._format_time
-_collect_trade_types = _tools._collect_trade_types
-_resolve_dates = _tools._resolve_dates
-_resolve_include_flags = _tools._resolve_include_flags
+_curate_trade = vars(_tools)["_curate_trade"]
+_format_time = vars(_tools)["_format_time"]
+_collect_trade_types = vars(_tools)["_collect_trade_types"]
+_resolve_dates = vars(_tools)["_resolve_dates"]
+_resolve_include_flags = vars(_tools)["_resolve_include_flags"]
+
+_PRICE = 655.24
+_CURRENT_PRICE = 655.01
+_VOLUME = 482021
+_UNRANKED = 9999
+_DOLLARS_MULTIPLIER = 26.94
+_DISTRIBUTION = 0.99
+_TRADE_COUNT = 48
+_DATE_LENGTH = 10
+_RESULT_COUNT = 2
+_DEFAULT_RANK = 100
+_OFFSET = 20
+_PAGE_SIZE = 10
+_RANK_COLUMN = 11
+_DOLLARS_COLUMN = 8
+_MULTIPLIER_COLUMN = 9
 
 
 def _make_trades(
@@ -154,14 +171,14 @@ def test_curate_trade_preserves_values(
 
     assert result["ticker"] == "SPY"
     assert result["time"] == "17:18"
-    assert result["price"] == 655.24
-    assert result["current_price"] == 655.01
+    assert result["price"] == _PRICE
+    assert result["current_price"] == _CURRENT_PRICE
     assert result["dollars"] == "$315.8M"
-    assert result["volume"] == 482021
-    assert result["trade_rank"] == 9999
-    assert result["dollars_multiplier"] == 26.94
-    assert result["cumulative_distribution"] == 0.99
-    assert result["trade_count"] == 48
+    assert result["volume"] == _VOLUME
+    assert result["trade_rank"] == _UNRANKED
+    assert result["dollars_multiplier"] == _DOLLARS_MULTIPLIER
+    assert result["cumulative_distribution"] == _DISTRIBUTION
+    assert result["trade_count"] == _TRADE_COUNT
     assert result["sector"] == "Large Caps"
 
 
@@ -206,7 +223,7 @@ def test_curate_trade_last_comparable_date(
     result = _curate_trade(trade, {})
 
     assert result["last_comparable_date"] is not None
-    assert len(result["last_comparable_date"]) == 10
+    assert len(result["last_comparable_date"]) == _DATE_LENGTH
 
 
 def test_curate_trade_omits_removed_fields(
@@ -252,7 +269,9 @@ def test_resolve_dates_ticker_query_defaults(
 def test_resolve_dates_explicit_values_win() -> None:
     """Explicit values override all defaults."""
     start, end = _resolve_dates(
-        tickers="AAPL", start_date="2025-01-01", end_date="2025-06-01"
+        tickers="AAPL",
+        start_date="2025-01-01",
+        end_date="2025-06-01",
     )
 
     assert start == "2025-01-01"
@@ -296,15 +315,17 @@ def test_resolve_include_flags_ticker_query() -> None:
 def test_envelope_shape_default(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return minimal envelope by default: data and metadata only."""
     raw_trades = _make_trades(sample_trade_response)
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: raw_trades)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: raw_trades)
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     # No warnings when endpoint succeeds.
@@ -316,15 +337,17 @@ def test_envelope_shape_default(
 def test_envelope_omits_warnings_when_empty(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Omit the warnings key entirely when there are no warnings."""
     raw_trades = _make_trades(sample_trade_response)
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: raw_trades)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: raw_trades)
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     assert "warnings" not in result
@@ -332,7 +355,7 @@ def test_envelope_omits_warnings_when_empty(
 
 def test_envelope_includes_warnings_when_present(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Include warnings key when endpoint fails."""
     monkeypatch.setattr(
@@ -342,7 +365,9 @@ def test_envelope_includes_warnings_when_present(
     )
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     assert "warnings" in result
@@ -352,19 +377,21 @@ def test_envelope_includes_warnings_when_present(
 def test_curated_fields_in_response(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Curate trade rows to the expected compact field set in tool response."""
     raw_trades = _make_trades(sample_trade_response)
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: raw_trades)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: raw_trades)
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     assert result["data"]["trades"] is not None
-    assert len(result["data"]["trades"]) == 2
+    assert len(result["data"]["trades"]) == _RESULT_COUNT
     assert set(result["data"]["trades"][0]) == {
         "ticker",
         "date",
@@ -386,18 +413,18 @@ def test_curated_fields_in_response(
 def test_default_dates_broad_scan(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Default to today for both dates on broad scans."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
     monkeypatch.setattr(_tools, "today_date_string", lambda: "2026-04-02")
 
     trades_tool(ctx=mcp_context)
@@ -409,18 +436,18 @@ def test_default_dates_broad_scan(
 def test_default_dates_ticker_query(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Default to 90-day lookback for ticker-specific queries."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
     monkeypatch.setattr(_tools, "today_date_string", lambda: "2026-04-02")
     monkeypatch.setattr(_tools, "ninety_days_ago_date_string", lambda: "2026-01-02")
 
@@ -433,18 +460,18 @@ def test_default_dates_ticker_query(
 def test_explicit_dates_used(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Use explicit dates when provided."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         tickers="AAPL",
@@ -460,18 +487,18 @@ def test_explicit_dates_used(
 def test_broad_scan_excludes_phantom_offsetting(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Broad scans default to excluding phantom and offsetting trades."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(start_date="2026-04-02", end_date="2026-04-02", ctx=mcp_context)
 
@@ -482,21 +509,24 @@ def test_broad_scan_excludes_phantom_offsetting(
 def test_ticker_query_includes_phantom_offsetting(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Ticker queries default to including phantom and offsetting trades."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
-        tickers="AAPL", start_date="2026-01-01", end_date="2026-04-02", ctx=mcp_context
+        tickers="AAPL",
+        start_date="2026-01-01",
+        end_date="2026-04-02",
+        ctx=mcp_context,
     )
 
     assert captured_kwargs["include_phantom"] == 1
@@ -506,39 +536,39 @@ def test_ticker_query_includes_phantom_offsetting(
 def test_trade_rank_default(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Default trade_rank to 100 (ranked trades only)."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(start_date="2026-04-02", end_date="2026-04-02", ctx=mcp_context)
 
-    assert captured_kwargs["trade_rank"] == 100
+    assert captured_kwargs["trade_rank"] == _DEFAULT_RANK
 
 
 def test_tickers_filter_passed_to_endpoint(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Pass ticker filter through to the endpoint function."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         tickers="AAPL,MSFT",
@@ -552,7 +582,7 @@ def test_tickers_filter_passed_to_endpoint(
 
 def test_endpoint_failure_returns_null_with_warning(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return trades as null with a warning when endpoint fails."""
     monkeypatch.setattr(
@@ -562,7 +592,9 @@ def test_endpoint_failure_returns_null_with_warning(
     )
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     assert result["data"]["trades"] is None
@@ -571,14 +603,16 @@ def test_endpoint_failure_returns_null_with_warning(
 
 def test_empty_result_returns_empty_list(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return empty trades list when endpoint returns no rows."""
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: [])
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: [])
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     assert result["data"]["trades"] == []
@@ -589,25 +623,27 @@ def test_empty_result_returns_empty_list(
 def test_metadata_counts(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Include accurate count and total_available metadata."""
     raw_trades = _make_trades(sample_trade_response)
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: raw_trades)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: raw_trades)
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
-    assert result["metadata"]["trade_count"] == 2
+    assert result["metadata"]["trade_count"] == _RESULT_COUNT
     # TotalRows from fixture is 48.
-    assert result["metadata"]["total_available"] == 48
+    assert result["metadata"]["total_available"] == _TRADE_COUNT
 
 
 def test_metadata_null_on_failure(
     monkeypatch: pytest.MonkeyPatch,
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Return null metadata when endpoint fails."""
     monkeypatch.setattr(
@@ -617,7 +653,9 @@ def test_metadata_null_on_failure(
     )
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
     assert result["metadata"]["trade_count"] is None
@@ -627,46 +665,46 @@ def test_metadata_null_on_failure(
 def test_offset_passed_to_endpoint(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Pass offset through to the endpoint as start parameter."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         start_date="2026-04-01",
         end_date="2026-04-01",
-        offset=20,
-        max_results=10,
+        offset=_OFFSET,
+        max_results=_PAGE_SIZE,
         ctx=mcp_context,
     )
 
-    assert captured_kwargs["start"] == 20
-    assert captured_kwargs["length"] == 10
+    assert captured_kwargs["start"] == _OFFSET
+    assert captured_kwargs["length"] == _PAGE_SIZE
 
 
 def test_offset_defaults_to_zero(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Default offset to 0 when not specified."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context)
 
@@ -676,18 +714,18 @@ def test_offset_defaults_to_zero(
 def test_sort_by_time_default(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Default sort by time descending (newest first)."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context)
 
@@ -698,18 +736,18 @@ def test_sort_by_time_default(
 def test_sort_by_rank(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Sort by rank ascending (best rank first)."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         start_date="2026-04-01",
@@ -718,25 +756,25 @@ def test_sort_by_rank(
         ctx=mcp_context,
     )
 
-    assert captured_kwargs["order_column_index"] == 11
+    assert captured_kwargs["order_column_index"] == _RANK_COLUMN
     assert captured_kwargs["order_direction"] == "asc"
 
 
 def test_sort_by_dollars(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Sort by dollars descending (biggest first)."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         start_date="2026-04-01",
@@ -745,25 +783,25 @@ def test_sort_by_dollars(
         ctx=mcp_context,
     )
 
-    assert captured_kwargs["order_column_index"] == 8
+    assert captured_kwargs["order_column_index"] == _DOLLARS_COLUMN
     assert captured_kwargs["order_direction"] == "desc"
 
 
 def test_sort_by_multiplier(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Sort by multiplier descending (most unusual first)."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         start_date="2026-04-01",
@@ -772,25 +810,25 @@ def test_sort_by_multiplier(
         ctx=mcp_context,
     )
 
-    assert captured_kwargs["order_column_index"] == 9
+    assert captured_kwargs["order_column_index"] == _MULTIPLIER_COLUMN
     assert captured_kwargs["order_direction"] == "desc"
 
 
 def test_sort_by_unknown_falls_back_to_time(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Fall back to time sort when sort_by value is unrecognized."""
     captured_kwargs: dict[str, Any] = {}
 
-    def fake_endpoint(*args: Any, **kwargs: Any) -> list[Any]:
+    def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
         return _make_trades(sample_trade_response)
 
     monkeypatch.setattr(_tools, "get_trades", fake_endpoint)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
 
     trades_tool(
         start_date="2026-04-01",
@@ -806,22 +844,24 @@ def test_sort_by_unknown_falls_back_to_time(
 def test_snapshots_enrich_current_price(
     monkeypatch: pytest.MonkeyPatch,
     sample_trade_response: dict[str, Any],
-    mcp_context: Any,
+    mcp_context: object,
 ) -> None:
     """Populate current_price from snapshot data."""
     raw_trades = _make_trades(sample_trade_response)
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: raw_trades)
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: raw_trades)
     monkeypatch.setattr(
         _tools,
         "fetch_snapshot_prices",
-        lambda *a, **kw: {"SPY": 655.01},
+        lambda *_, **__: {"SPY": 655.01},
     )
 
     result = trades_tool(
-        start_date="2026-04-01", end_date="2026-04-01", ctx=mcp_context
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
     )
 
-    assert result["data"]["trades"][0]["current_price"] == 655.01
+    assert result["data"]["trades"][0]["current_price"] == _CURRENT_PRICE
 
 
 @pytest.mark.asyncio
@@ -830,7 +870,6 @@ async def test_fastmcp_client_transport(
     sample_trade_response: dict[str, Any],
 ) -> None:
     """Call the registered tool through FastMCP client transport."""
-    from fastmcp import Client
 
     class _FakeClient:
         """Test client object used for lifespan initialization."""
@@ -839,8 +878,8 @@ async def test_fastmcp_client_transport(
             """Provide the close method expected by lifespan cleanup."""
 
     raw_trades = _make_trades(sample_trade_response)
-    monkeypatch.setattr(_tools, "get_trades", lambda *a, **kw: raw_trades)
-    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *a, **kw: {})
+    monkeypatch.setattr(_tools, "get_trades", lambda *_, **__: raw_trades)
+    monkeypatch.setattr(_tools, "fetch_snapshot_prices", lambda *_, **__: {})
     monkeypatch.setattr(_mcp_module, "VolumeLeadersClient", _FakeClient)
 
     async with Client(_mcp_module.mcp) as client:

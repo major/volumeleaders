@@ -31,11 +31,12 @@ def test_fetch_xsrf_token_extracts_hidden_input_value() -> None:
     )
     http_client.get.return_value = response
 
-    token = fetch_xsrf_token(
-        http_client=http_client, cookies={"ASP.NET_SessionId": "x"}
+    result = fetch_xsrf_token(
+        http_client=http_client,
+        cookies={"ASP.NET_SessionId": "x"},
     )
 
-    assert token == "token-123"
+    assert result == "token-123"
 
 
 def test_fetch_xsrf_token_raises_when_redirected_to_login() -> None:

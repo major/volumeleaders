@@ -7,7 +7,7 @@ other response normalization.
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # ASP.NET serializes dates as /Date(epoch_ms)/ with optional timezone offset.
 _ASPNET_DATE_RE = re.compile(r"/Date\((-?\d+)\)/")
@@ -38,7 +38,7 @@ def parse_aspnet_date(value: str | None) -> datetime | None:
     if epoch_ms in _NULL_EPOCH_MS:
         return None
 
-    return datetime.fromtimestamp(epoch_ms / 1000, tz=timezone.utc)
+    return datetime.fromtimestamp(epoch_ms / 1000, tz=UTC)
 
 
 def parse_snapshot_string(raw: str) -> dict[str, float]:
@@ -74,7 +74,7 @@ def parse_datekey(datekey: int) -> datetime:
     year = datekey // 10000
     month = (datekey % 10000) // 100
     day = datekey % 100
-    return datetime(year, month, day, tzinfo=timezone.utc)
+    return datetime(year, month, day, tzinfo=UTC)
 
 
 def format_datekey(dt: datetime) -> str:

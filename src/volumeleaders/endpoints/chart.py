@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from volumeleaders._client import VolumeLeadersClient
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders._parsing import format_datekey
 from volumeleaders.endpoints.levels import TRADE_LEVEL_COLUMNS
@@ -16,16 +16,21 @@ from volumeleaders.models import (
     TradeLevel,
 )
 
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
+
+_DATE_KEY_LENGTH = 8
+
 
 def _to_date_key(value: str) -> str:
     """Normalize YYYY-MM-DD or YYYYMMDD strings to YYYYMMDD."""
     stripped = value.strip()
-    if len(stripped) == 8 and stripped.isdigit():
+    if len(stripped) == _DATE_KEY_LENGTH and stripped.isdigit():
         return stripped
     return format_datekey(datetime.fromisoformat(stripped))
 
 
-def get_price_data(
+def get_price_data(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     ticker: str,
@@ -90,7 +95,10 @@ def get_price_data(
 
 
 def get_snapshot(
-    client: VolumeLeadersClient, *, ticker: str, date_key: str
+    client: VolumeLeadersClient,
+    *,
+    ticker: str,
+    date_key: str,
 ) -> Snapshot:
     """Return quote snapshot envelope for a ticker/date key."""
     payload = {"Ticker": ticker, "DateKey": _to_date_key(date_key)}

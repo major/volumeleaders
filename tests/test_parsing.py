@@ -1,10 +1,13 @@
 """Tests for parsing helpers in volumeleaders._parsing."""
 
-from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib import import_module
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _parsing = import_module("volumeleaders._parsing")
 format_date = _parsing.format_date
@@ -35,7 +38,7 @@ def test_parse_aspnet_date_handles_empty_and_malformed_values(raw: str | None) -
 def test_parse_aspnet_date_parses_normal_date() -> None:
     """Parse a valid ASP.NET date string into a UTC datetime."""
     parsed = parse_aspnet_date("/Date(1775001600000)/")
-    assert parsed == datetime(2026, 4, 1, tzinfo=timezone.utc)
+    assert parsed == datetime(2026, 4, 1, tzinfo=UTC)
 
 
 @pytest.mark.parametrize(
@@ -63,8 +66,8 @@ def test_parse_snapshot_string(raw: str, expected: dict[str, float]) -> None:
 @pytest.mark.parametrize(
     ("datekey", "expected"),
     [
-        (20260401, datetime(2026, 4, 1, tzinfo=timezone.utc)),
-        (20000101, datetime(2000, 1, 1, tzinfo=timezone.utc)),
+        (20260401, datetime(2026, 4, 1, tzinfo=UTC)),
+        (20000101, datetime(2000, 1, 1, tzinfo=UTC)),
     ],
 )
 def test_parse_datekey_parses_valid_values(datekey: int, expected: datetime) -> None:
@@ -75,7 +78,7 @@ def test_parse_datekey_parses_valid_values(datekey: int, expected: datetime) -> 
 @pytest.mark.parametrize("datekey", [20260229, 20261301, 20260001])
 def test_parse_datekey_raises_for_invalid_values(datekey: int) -> None:
     """Raise ValueError when the datekey does not represent a real date."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="must be"):
         parse_datekey(datekey)
 
 
@@ -88,4 +91,4 @@ def test_parse_datekey_raises_for_invalid_values(datekey: int) -> None:
 )
 def test_date_formatting(formatter: Callable[[datetime], str], expected: str) -> None:
     """Format datetime values into API-compatible date strings."""
-    assert formatter(datetime(2026, 4, 1, tzinfo=timezone.utc)) == expected
+    assert formatter(datetime(2026, 4, 1, tzinfo=UTC)) == expected

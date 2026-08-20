@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastmcp import Context
 from fastmcp.dependencies import CurrentContext
 from pydantic import Field
 
+from volumeleaders._exceptions import APIError
 from volumeleaders.endpoints.chart import get_company
 from volumeleaders.endpoints.levels import get_trade_levels
 from volumeleaders.endpoints.trades import get_all_snapshots
@@ -21,7 +21,14 @@ from volumeleaders.mcp.utils import (
     resolve_client,
     today_date_string,
 )
-from volumeleaders.models import TradeLevel
+
+_DEFAULT_CONTEXT = CurrentContext()
+
+if TYPE_CHECKING:
+    from fastmcp import Context
+
+    from volumeleaders._client import VolumeLeadersClient
+    from volumeleaders.models import TradeLevel
 
 
 def _curate_level(level: TradeLevel) -> dict[str, Any]:
@@ -62,7 +69,11 @@ def _curate_level(level: TradeLevel) -> dict[str, Any]:
     }
 
 
-def _get_current_price(client: Any, ticker: str, warnings: list[str]) -> float | None:
+def _get_current_price(
+    client: VolumeLeadersClient,
+    ticker: str,
+    warnings: list[str],
+) -> float | None:
     """Resolve current price using the best available API source.
 
     `GetCompany` is the cheapest lookup, but the real API often returns
@@ -75,7 +86,7 @@ def _get_current_price(client: Any, ticker: str, warnings: list[str]) -> float |
 
     try:
         company = get_company(client, ticker=ticker)
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         company_error = error
     else:
         if company.current_price is not None:
@@ -83,7 +94,7 @@ def _get_current_price(client: Any, ticker: str, warnings: list[str]) -> float |
 
     try:
         snapshots = get_all_snapshots(client)
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         snapshot_error = error
     else:
         return snapshots.get(ticker)
@@ -96,13 +107,15 @@ def _get_current_price(client: Any, ticker: str, warnings: list[str]) -> float |
         )
     if snapshot_error is not None:
         capture_non_auth_error(
-            warnings, "Failed to fetch current price from snapshots", snapshot_error
+            warnings,
+            "Failed to fetch current price from snapshots",
+            snapshot_error,
         )
     return None
 
 
 @mcp.tool
-def trade_levels(
+def trade_levels(  # noqa: PLR0913
     ticker: Annotated[
         str,
         Field(
@@ -173,7 +186,7 @@ def trade_levels(
             ),
         ),
     ] = 10,
-    ctx: Context = CurrentContext(),
+    ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
     """Look up institutional trade levels for a ticker.
 
@@ -199,8 +212,8 @@ def trade_levels(
     - level_origin_date / level_last_confirmed: date range of the
       block trades composing this level
     """
-    eff_start = start_date if start_date else one_year_ago_date_string()
-    eff_end = end_date if end_date else today_date_string()
+    eff_start = start_date or one_year_ago_date_string()
+    eff_end = end_date or today_date_string()
     warnings: list[str] = []
     client = resolve_client(ctx)
 
@@ -217,7 +230,7 @@ def trade_levels(
             trade_level_count=trade_level_count,
         )
         levels_data = [_curate_level(level) for level in raw_levels]
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         capture_non_auth_error(warnings, "Failed to fetch trade levels", error)
 
     current_price = _get_current_price(client, ticker, warnings)
@@ -226,7 +239,8 @@ def trade_levels(
     if levels_data is not None and current_price:
         for level in levels_data:
             level["proximity_pct"] = round(
-                (level["price"] - current_price) / current_price * 100, 2
+                (level["price"] - current_price) / current_price * 100,
+                2,
             )
 
     result: dict[str, Any] = {}

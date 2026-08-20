@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
-from fastmcp import Context
 from fastmcp.dependencies import CurrentContext
 from pydantic import Field
 
+from volumeleaders._exceptions import APIError
 from volumeleaders.endpoints.levels import get_trade_level_touches
 from volumeleaders.mcp import mcp
 from volumeleaders.mcp.utils import (
@@ -18,8 +18,14 @@ from volumeleaders.mcp.utils import (
     resolve_client,
     today_date_string,
 )
-from volumeleaders.models import TradeLevelTouch
 
+_TIME_PARTS = 2
+_DEFAULT_CONTEXT = CurrentContext()
+
+if TYPE_CHECKING:
+    from fastmcp import Context
+
+    from volumeleaders.models import TradeLevelTouch
 
 # Per-ticker defaults: permissive filters for single-ticker lookups.
 _TICKER_RELATIVE_SIZE = 0
@@ -70,7 +76,7 @@ def _format_time(touch: TradeLevelTouch) -> str:
         return touch.full_time_string24[:5]
     # Fallback: parse from "2026-04-01 : 17:51:00"
     parts = touch.full_date_time.split(" : ", maxsplit=1)
-    return parts[1][:5] if len(parts) == 2 else touch.full_date_time
+    return parts[1][:5] if len(parts) == _TIME_PARTS else touch.full_date_time
 
 
 def _curate_touch(touch: TradeLevelTouch) -> dict[str, Any]:
@@ -110,7 +116,7 @@ def _curate_touch(touch: TradeLevelTouch) -> dict[str, Any]:
 
 
 @mcp.tool
-def trade_level_touches(
+def trade_level_touches(  # noqa: PLR0913
     tickers: Annotated[
         str,
         Field(
@@ -172,7 +178,7 @@ def trade_level_touches(
             description="Maximum number of results to return.",
         ),
     ] = 50,
-    ctx: Context = CurrentContext(),
+    ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
     """Find trade level touch events for a given day.
 
@@ -195,7 +201,7 @@ def trade_level_touches(
     - level_origin_date / level_last_confirmed: date range of the
       block trades composing this level (not price revisits)
     """
-    query_date = date if date else today_date_string()
+    query_date = date or today_date_string()
     eff_rs, eff_tlr, eff_md = _resolve_filters(
         tickers=tickers,
         relative_size=relative_size,
@@ -220,7 +226,7 @@ def trade_level_touches(
         )
         touches_data = [_curate_touch(t) for t in raw_touches]
         total_count = raw_touches[0].total_rows if raw_touches else 0
-    except Exception as error:
+    except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:
         capture_non_auth_error(warnings, "Failed to fetch trade level touches", error)
 
     result: dict[str, Any] = {}

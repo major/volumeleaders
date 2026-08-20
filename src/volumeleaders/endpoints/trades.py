@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from volumeleaders._client import VolumeLeadersClient
+from typing import TYPE_CHECKING
+
 from volumeleaders._datatables import DataTablesRequest
 from volumeleaders._parsing import parse_snapshot_string
 from volumeleaders.models import Trade, TradeCluster, TradeClusterBomb
+
+if TYPE_CHECKING:
+    from volumeleaders._client import VolumeLeadersClient
 
 TRADE_COLUMNS = [
     "FullTimeString24",
@@ -59,7 +63,7 @@ TRADE_CLUSTER_BOMB_COLUMNS = [
 ]
 
 
-def get_trades(
+def get_trades(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     tickers: str = "",
@@ -139,7 +143,7 @@ def get_trades(
     return [Trade.model_validate(row) for row in rows]
 
 
-def get_trade_clusters(
+def get_trade_clusters(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     tickers: str = "",
@@ -187,7 +191,7 @@ def get_trade_clusters(
     return [TradeCluster.model_validate(row) for row in rows]
 
 
-def get_trade_cluster_bombs(
+def get_trade_cluster_bombs(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     tickers: str = "",
@@ -228,7 +232,8 @@ def get_trade_cluster_bombs(
         },
     )
     rows = client.post_datatables(
-        "/TradeClusterBombs/GetTradeClusterBombs", request.encode()
+        "/TradeClusterBombs/GetTradeClusterBombs",
+        request.encode(),
     )
     return [TradeClusterBomb.model_validate(row) for row in rows]
 
