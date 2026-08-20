@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-Standalone functions that build requests, call `client.post_json()` or `client.post_datatables()`, and return typed model lists. One file per API domain.
+Standalone functions that build requests, call `client.post_json()`, `client.post_form()`, or `client.post_datatables()`, and return typed model lists. One file per API domain.
 
 ## WHERE TO LOOK
 

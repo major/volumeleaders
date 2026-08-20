@@ -1,4 +1,4 @@
-"""Endpoints for sector breakdown, outliers, themes, supply/demand, and daily returns."""
+"""Endpoints for sector breakdown, outliers, themes, and daily returns."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def get_institutional_outliers(
     lookback_days: int = 7,
     min_std: float = 2.0,
 ) -> list[InstitutionalOutlier]:
-    """Return statistical outlier block trade records exceeding standard deviation threshold."""
+    """Return statistical outlier block trades exceeding sigma threshold."""
     payload = {
         "EndDate": end_date,
         "LookbackDays": lookback_days,
@@ -70,7 +70,7 @@ def get_notional_by_sector_by_name(
     top_themes: int = 10,
     top_tickers: int = 10,
 ) -> list[SectorThemeNotional]:
-    """Return hierarchical sector, theme, and ticker institutional capital allocation."""
+    """Return hierarchical sector, theme, and ticker institutional flows."""
     payload = {
         "EndDateKey": int(_to_date_key(end_date)) if end_date else 0,
         "TopThemes": top_themes,

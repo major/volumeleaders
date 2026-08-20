@@ -66,7 +66,11 @@ def _fetch_outliers(
             min_std=min_sigmas,
         )
     except APIError as error:
-        capture_non_auth_error(warnings, "Failed to fetch institutional outliers", error)
+        capture_non_auth_error(
+            warnings,
+            "Failed to fetch institutional outliers",
+            error,
+        )
         return []
 
 
@@ -87,7 +91,7 @@ def _filter_and_sort_outliers(
 
 
 @mcp.tool
-def institutional_outliers(
+def institutional_outliers(  # noqa: PLR0913
     date: Annotated[
         str,
         Field(
@@ -125,7 +129,7 @@ def institutional_outliers(
         str,
         Field(
             description=(
-                "Comma-separated sector names to filter (e.g. 'Technology,Financial Services'). "
+                "Comma-separated sector names to filter (e.g. 'Technology,Bonds'). "
                 "Empty string returns all sectors."
             ),
         ),
@@ -136,7 +140,7 @@ def institutional_outliers(
             description="Maximum number of outlier records to return. Defaults to 25.",
         ),
     ] = 25,
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -144,7 +148,7 @@ def institutional_outliers(
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Scan for institutional block trade volume anomalies exceeding statistical thresholds."""
+    """Scan for institutional block trade volume anomalies exceeding thresholds."""
     client = resolve_client(ctx)
     resolved_date = date or today_date_string()
     warnings: list[str] = []
@@ -161,7 +165,8 @@ def institutional_outliers(
 
     filtered = _filter_and_sort_outliers(raw_rows, ticker_set, sector_set)
     total_matching = len(filtered)
-    curated = [_curate_outlier(r) for r in filtered[:max_results]]
+    limit = max(0, max_results)
+    curated = [_curate_outlier(r) for r in filtered[:limit]]
 
     envelope: dict[str, Any] = {
         "data": curated,

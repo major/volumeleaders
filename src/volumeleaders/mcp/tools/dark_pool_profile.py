@@ -63,6 +63,7 @@ def _aggregate_ticker_bins(
 def _curate_ticker_profile(
     ticker: str,
     rows: list[DarkPoolVolumeBin],
+    *,
     top_nodes_only: bool,
 ) -> dict[str, Any]:
     """Curate a compact volume-by-price profile for a single ticker."""
@@ -102,9 +103,7 @@ def _curate_ticker_profile(
                 "price_range": f"${b['bin_low']:.2f} - ${b['bin_high']:.2f}",
                 "dp_dollars": format_dollars(b["dp_dollars"]),
                 "share_of_total_pct": (
-                    round(b["dp_dollars"] / total_dp * 100, 1)
-                    if total_dp > 0
-                    else 0.0
+                    round(b["dp_dollars"] / total_dp * 100, 1) if total_dp > 0 else 0.0
                 ),
             }
             for b in top_nodes
@@ -123,7 +122,7 @@ def _curate_ticker_profile(
     return base
 
 
-def _fetch_dark_pool_report(
+def _fetch_dark_pool_report(  # noqa: PLR0913
     client: VolumeLeadersClient,
     start_date: str,
     end_date: str,
@@ -161,7 +160,7 @@ def _group_by_requested_tickers(
 
 
 @mcp.tool
-def dark_pool_profile(
+def dark_pool_profile(  # noqa: PLR0913
     tickers: Annotated[
         str,
         Field(
@@ -183,7 +182,7 @@ def dark_pool_profile(
             description="End date in YYYY-MM-DD format. Defaults to today.",
         ),
     ] = "",
-    top_nodes_only: Annotated[
+    top_nodes_only: Annotated[  # noqa: FBT002
         bool,
         Field(
             description=(
@@ -198,7 +197,7 @@ def dark_pool_profile(
             description="Number of price bins to compute (default 24).",
         ),
     ] = 24,
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -206,15 +205,13 @@ def dark_pool_profile(
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Analyze dark pool volume-by-price distribution and Point-of-Control (POC) for tickers."""
+    """Analyze dark pool volume-by-price distribution and Point-of-Control."""
     client = resolve_client(ctx)
     resolved_start = start_date or one_week_ago_date_string()
     resolved_end = end_date or today_date_string()
     warnings: list[str] = []
 
-    clean_tickers = ",".join(
-        t.strip().upper() for t in tickers.split(",") if t.strip()
-    )
+    clean_tickers = ",".join(t.strip().upper() for t in tickers.split(",") if t.strip())
 
     if not clean_tickers:
         return {

@@ -20,6 +20,8 @@ from volumeleaders.mcp.utils import (
 )
 
 _DEFAULT_CONTEXT = CurrentContext()
+_STRONG_SUPPORT_THRESHOLD = 6.0
+_MODERATE_SUPPORT_THRESHOLD = 3.0
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -37,9 +39,9 @@ def _parse_filter_set(filter_str: str) -> set[str]:
 
 def _classify_support_bias(median_score: float) -> str:
     """Classify the institutional support bias based on median score."""
-    if median_score >= 6.0:
+    if median_score >= _STRONG_SUPPORT_THRESHOLD:
         return "Strong Support"
-    if median_score >= 3.0:
+    if median_score >= _MODERATE_SUPPORT_THRESHOLD:
         return "Moderate Support"
     return "Supply Overhead"
 
@@ -100,6 +102,7 @@ def _fetch_support_areas(
 
 def _filter_support_rows(
     raw_rows: list[SupplyDemandArea],
+    *,
     is_explicit_query: bool,
     sector_set: set[str],
 ) -> list[SupplyDemandArea]:
@@ -115,7 +118,7 @@ def _filter_support_rows(
 
 
 @mcp.tool
-def sector_support_scores(
+def sector_support_scores(  # noqa: PLR0913
     date: Annotated[
         str,
         Field(
@@ -146,7 +149,7 @@ def sector_support_scores(
             ),
         ),
     ] = "",
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -154,7 +157,7 @@ def sector_support_scores(
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Analyze automated supply and demand support score distributions across sectors."""
+    """Analyze automated supply and demand support score distributions."""
     client = resolve_client(ctx)
     resolved_start, resolved_end = _resolve_support_dates(date, start_date, end_date)
     warnings: list[str] = []
@@ -162,7 +165,11 @@ def sector_support_scores(
     raw_rows = _fetch_support_areas(client, resolved_start, resolved_end, warnings)
     is_explicit = bool(date or start_date or end_date)
     sector_set = _parse_filter_set(sectors)
-    filtered = _filter_support_rows(raw_rows, is_explicit, sector_set)
+    filtered = _filter_support_rows(
+        raw_rows,
+        is_explicit_query=is_explicit,
+        sector_set=sector_set,
+    )
 
     curated = [_curate_support_area(r) for r in filtered]
 

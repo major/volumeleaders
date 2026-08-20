@@ -20,29 +20,36 @@ from volumeleaders.mcp.utils import (
 )
 
 _DEFAULT_CONTEXT = CurrentContext()
+_MIN_PERIOD_SAMPLE = 2
+_EPSILON = 1e-12
+_RRG_CENTER = 100.0
 
-_EQUITY_SECTORS: frozenset[str] = frozenset({
-    "Technology",
-    "Healthcare",
-    "Financial Services",
-    "Consumer Discretionary",
-    "Consumer Staples",
-    "Industrials",
-    "Energy",
-    "Materials",
-    "Real Estate",
-    "Utilities",
-    "Communication Services",
-})
+_EQUITY_SECTORS: frozenset[str] = frozenset(
+    {
+        "Technology",
+        "Healthcare",
+        "Financial Services",
+        "Consumer Discretionary",
+        "Consumer Staples",
+        "Industrials",
+        "Energy",
+        "Materials",
+        "Real Estate",
+        "Utilities",
+        "Communication Services",
+    },
+)
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from fastmcp import Context
 
     from volumeleaders._client import VolumeLeadersClient
     from volumeleaders.models import SectorDailyReturn
 
 
-def _sma(values: list[float | None], end_idx: int, period: int) -> float | None:
+def _sma(values: Sequence[float | None], end_idx: int, period: int) -> float | None:
     """Compute Simple Moving Average of a slice ending at end_idx."""
     if end_idx + 1 < period:
         return None
@@ -53,25 +60,23 @@ def _sma(values: list[float | None], end_idx: int, period: int) -> float | None:
 
 
 def _std_sample(
-    values: list[float | None],
+    values: Sequence[float | None],
     end_idx: int,
     period: int,
 ) -> float | None:
     """Compute sample standard deviation of a slice ending at end_idx."""
     mean = _sma(values, end_idx, period)
-    if mean is None or period < 2:
+    if mean is None or period < _MIN_PERIOD_SAMPLE:
         return None
     sub = values[end_idx - period + 1 : end_idx + 1]
     if any(x is None for x in sub):
         return None
-    var = sum((float(x) - mean) ** 2 for x in sub if x is not None) / (
-        period - 1
-    )
+    var = sum((float(x) - mean) ** 2 for x in sub if x is not None) / (period - 1)
     return math.sqrt(var) if var > 0 else None
 
 
 def _normalize_100(
-    values: list[float | None],
+    values: Sequence[float | None],
     end_idx: int,
     lookback: int,
 ) -> float | None:
@@ -81,9 +86,9 @@ def _normalize_100(
         return None
     mean = _sma(values, end_idx, lookback)
     std = _std_sample(values, end_idx, lookback)
-    if mean is None or std is None or std < 1e-12:
+    if mean is None or std is None or std < _EPSILON:
         return None
-    return 100.0 + 10.0 * ((float(current) - mean) / std)
+    return _RRG_CENTER + 10.0 * ((float(current) - mean) / std)
 
 
 def _build_relative_points(
@@ -97,13 +102,7 @@ def _build_relative_points(
 
     for r in sorted_rows:
         spy = r.spy_close
-        ret = (
-            r.sector_daily_return_pct / 100.0
-            if r.sector_daily_return_pct is not None
-            else r.sector_daily_return
-        )
-        if abs(ret) > 0.5:
-            ret = ret / 100.0
+        ret = r.sector_daily_return_pct / 100.0
 
         if spy <= 0:
             continue
@@ -111,7 +110,7 @@ def _build_relative_points(
         if prev_spy is not None:
             spy_ret = (spy / prev_spy) - 1.0
             denom = 1.0 + spy_ret
-            if abs(denom) > 1e-12:
+            if abs(denom) > _EPSILON:
                 rel = rel * ((1.0 + ret) / denom)
 
         points.append({"date_key": r.date_key, "rel": rel})
@@ -127,8 +126,7 @@ def _compute_rs_series(
 ) -> tuple[list[float | None], list[float | None]]:
     """Compute smoothed RS-Ratio and RS-Momentum series."""
     smoothed: list[float | None] = [
-        _sma(rel_values, i, window)  # type: ignore[arg-type]
-        for i in range(len(rel_values))
+        _sma(rel_values, i, window) for i in range(len(rel_values))
     ]
 
     rs_ratio: list[float | None] = [
@@ -152,14 +150,14 @@ def _compute_rs_series(
 
 def _classify_quadrant(rs_ratio: float, rs_momentum: float) -> str:
     """Classify RRG quadrant based on RS-Ratio and RS-Momentum."""
-    if rs_ratio >= 100.0:
-        return "Leading" if rs_momentum >= 100.0 else "Weakening"
-    return "Improving" if rs_momentum >= 100.0 else "Lagging"
+    if rs_ratio >= _RRG_CENTER:
+        return "Leading" if rs_momentum >= _RRG_CENTER else "Weakening"
+    return "Improving" if rs_momentum >= _RRG_CENTER else "Lagging"
 
 
 def _determine_trajectory(trail: list[dict[str, Any]]) -> str:
     """Determine directional heading and momentum velocity from trail points."""
-    if len(trail) < 2:
+    if len(trail) < _MIN_PERIOD_SAMPLE:
         return "Stable"
     dx = trail[-1]["rs_ratio"] - trail[-2]["rs_ratio"]
     dy = trail[-1]["rs_momentum"] - trail[-2]["rs_momentum"]
@@ -195,11 +193,13 @@ def _compute_sector_rrg_model(
         r_val = rs_ratio[t]
         m_val = rs_mom[t]
         if r_val is not None and m_val is not None:
-            trail.append({
-                "date": format_datekey_to_iso(points[t]["date_key"]),
-                "rs_ratio": round(r_val, 1),
-                "rs_momentum": round(m_val, 1),
-            })
+            trail.append(
+                {
+                    "date": format_datekey_to_iso(points[t]["date_key"]),
+                    "rs_ratio": round(r_val, 1),
+                    "rs_momentum": round(m_val, 1),
+                },
+            )
 
     if not trail:
         return None
@@ -239,6 +239,7 @@ def _fetch_rrg_returns(
 
 def _group_by_eligible_sector(
     rows: list[SectorDailyReturn],
+    *,
     equity_only: bool,
 ) -> dict[str, list[SectorDailyReturn]]:
     """Group rows by sector applying equity sector filter."""
@@ -267,22 +268,25 @@ def sector_rotation_rrg(  # noqa: PLR0913
     trail_length: Annotated[
         int,
         Field(
-            description="Number of historical trail bars to include (1-10). Defaults to 3.",
+            description="Historical trail bars to include (1-10). Defaults to 3.",
         ),
     ] = 3,
-    equity_only: Annotated[
+    equity_only: Annotated[  # noqa: FBT002
         bool,
         Field(
-            description="Filter to equity market sectors only (excluding bonds and commodities). Defaults to True.",
+            description=(
+                "Filter to equity market sectors only (excluding bonds/commodities). "
+                "Defaults to True."
+            ),
         ),
     ] = True,
     sectors: Annotated[
         str,
         Field(
-            description="Comma-separated sector names to filter. Empty string returns all candidate sectors.",
+            description="Comma-separated sector names to filter (empty = all).",
         ),
     ] = "",
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -290,20 +294,16 @@ def sector_rotation_rrg(  # noqa: PLR0913
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Analyze sector rotation using JdK Relative Rotation Graph (RRG) quadrant modeling vs SPY."""
+    """Analyze sector rotation using JdK Relative Rotation Graph modeling vs SPY."""
     client = resolve_client(ctx)
     resolved_start = one_year_ago_date_string()
     resolved_end = today_date_string()
     warnings: list[str] = []
 
     raw_rows = _fetch_rrg_returns(client, resolved_start, resolved_end, warnings)
-    by_sector = _group_by_eligible_sector(raw_rows, equity_only)
+    by_sector = _group_by_eligible_sector(raw_rows, equity_only=equity_only)
 
-    target_sectors = {
-        s.strip().casefold()
-        for s in sectors.split(",")
-        if s.strip()
-    }
+    target_sectors = {s.strip().casefold() for s in sectors.split(",") if s.strip()}
 
     curated: list[dict[str, Any]] = []
     w_clean = max(3, window)

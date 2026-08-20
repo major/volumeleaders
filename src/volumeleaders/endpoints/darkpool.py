@@ -22,7 +22,7 @@ def _to_date_key(value: str) -> str:
     return format_datekey(datetime.fromisoformat(stripped))
 
 
-def get_dark_pool_volume_report(
+def get_dark_pool_volume_report(  # noqa: PLR0913
     client: VolumeLeadersClient,
     *,
     last_trade_date: str = "",

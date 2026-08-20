@@ -54,12 +54,14 @@ def _group_sector_themes(
             }
 
         t_entry = t_map[r.theme]
-        t_entry["tickers"].append({
-            "ticker": r.ticker,
-            "dollars": format_dollars(r.dollars),
-            "share_of_theme_pct": round(r.ticker_pct_of_theme, 1),
-            "trades": r.trades,
-        })
+        t_entry["tickers"].append(
+            {
+                "ticker": r.ticker,
+                "dollars": format_dollars(r.dollars),
+                "share_of_theme_pct": round(r.ticker_pct_of_theme, 1),
+                "trades": r.trades,
+            },
+        )
 
     curated_sectors: list[dict[str, Any]] = []
     for s_name, s_data in sorted(sectors_map.items(), key=lambda x: x[1]["rank"]):
@@ -70,11 +72,13 @@ def _group_sector_themes(
         for t in capped_themes:
             t["tickers"] = t["tickers"][:top_tickers]
 
-        curated_sectors.append({
-            "sector": s_name,
-            "rank": s_data["rank"],
-            "themes": capped_themes,
-        })
+        curated_sectors.append(
+            {
+                "sector": s_name,
+                "rank": s_data["rank"],
+                "themes": capped_themes,
+            },
+        )
 
     return curated_sectors
 
@@ -118,7 +122,7 @@ def _filter_theme_rows(
 
 
 @mcp.tool
-def sector_themes(
+def sector_themes(  # noqa: PLR0913
     date: Annotated[
         str,
         Field(
@@ -155,7 +159,7 @@ def sector_themes(
             description="Number of top tickers per theme (1-10). Defaults to 3.",
         ),
     ] = 3,
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -163,7 +167,7 @@ def sector_themes(
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Examine hierarchical institutional capital allocation across sectors, themes, and tickers."""
+    """Examine hierarchical capital flows across sectors, themes, and tickers."""
     client = resolve_client(ctx)
     resolved_date = date or today_date_string()
     warnings: list[str] = []

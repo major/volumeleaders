@@ -81,9 +81,7 @@ def sector_flows(
     start_date: Annotated[
         str,
         Field(
-            description=(
-                "Start date in YYYY-MM-DD format. Defaults to one week ago."
-            ),
+            description=("Start date in YYYY-MM-DD format. Defaults to one week ago."),
         ),
     ] = "",
     end_date: Annotated[
@@ -101,7 +99,7 @@ def sector_flows(
             ),
         ),
     ] = "",
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -109,7 +107,7 @@ def sector_flows(
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Scan institutional dollar volume flows and market share allocation across sectors."""
+    """Scan institutional dollar volume flows and market share across sectors."""
     client = resolve_client(ctx)
     resolved_start = start_date or one_week_ago_date_string()
     resolved_end = end_date or today_date_string()

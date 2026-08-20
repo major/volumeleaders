@@ -10,6 +10,9 @@ SectorDailyReturn = _models.SectorDailyReturn
 SectorThemeNotional = _models.SectorThemeNotional
 SupplyDemandArea = _models.SupplyDemandArea
 
+_MIN_DATE_KEY = 20_000_000
+_EXPECTED_RANK = 4
+
 
 def test_sector_breakdown_model(
     sample_sector_breakdown_response: list[dict[str, Any]],
@@ -17,7 +20,7 @@ def test_sector_breakdown_model(
     """Validate SectorBreakdown model parses real response rows."""
     assert len(sample_sector_breakdown_response) > 0
     row = SectorBreakdown.model_validate(sample_sector_breakdown_response[0])
-    assert row.date_key > 20000000
+    assert row.date_key > _MIN_DATE_KEY
     assert isinstance(row.sector, str)
     assert row.dollars > 0
 
@@ -30,7 +33,7 @@ def test_institutional_outlier_model(
     row = InstitutionalOutlier.model_validate(sample_institutional_outliers_response[0])
     assert row.ticker == "VCIT"
     assert row.sector == "Bonds"
-    assert row.trade_rank == 4
+    assert row.trade_rank == _EXPECTED_RANK
     assert row.sigmas > 0
     assert row.dollars > 0
     assert row.date is not None

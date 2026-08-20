@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Annotated, Any
 
 from fastmcp.dependencies import CurrentContext
@@ -38,7 +39,7 @@ def _extract_timeframe_metrics(
     row: SectorDailyReturn,
     timeframe: str,
 ) -> tuple[float, float, float, float, float]:
-    """Extract (beta, momentum, realized_vol, relative_strength, sharpe) for a timeframe."""
+    """Extract beta, momentum, realized_vol, relative_strength, and sharpe."""
     tf = timeframe.lower().strip()
     if tf in {"10", "10d", "10-day"}:
         return (
@@ -106,16 +107,29 @@ def _curate_sector_factor_row(
         base[key] = val
         return base
 
-    base.update({
-        "daily_return_pct": round(row.sector_daily_return_pct, 2),
-        "pct_advancers": round(row.pct_tickers_positive, 1),
-        "momentum_pct": round(mom * 100, 2),
-        "relative_strength_pct": round(rs * 100, 2),
-        "sharpe": round(sharpe, 2),
-        "beta": round(beta, 2),
-        "realized_vol_pct": round(vol * 100, 2),
-    })
+    base.update(
+        {
+            "daily_return_pct": round(row.sector_daily_return_pct, 2),
+            "pct_advancers": round(row.pct_tickers_positive, 1),
+            "momentum_pct": round(mom * 100, 2),
+            "relative_strength_pct": round(rs * 100, 2),
+            "sharpe": round(sharpe, 2),
+            "beta": round(beta, 2),
+            "realized_vol_pct": round(vol * 100, 2),
+        },
+    )
     return base
+
+
+def _resolve_factor_dates(date: str) -> tuple[str, str]:
+    """Resolve start and end date strings for 90-day factor lookback."""
+    end = date or today_date_string()
+    try:
+        dt = datetime.fromisoformat(end.strip())
+        start = (dt - timedelta(days=90)).strftime("%Y-%m-%d")
+    except ValueError:
+        start = ninety_days_ago_date_string()
+    return start, end
 
 
 def _fetch_sector_returns(
@@ -150,7 +164,7 @@ def _select_target_slice(
 
 
 @mcp.tool
-def sector_factors(
+def sector_factors(  # noqa: PLR0913
     date: Annotated[
         str,
         Field(
@@ -184,7 +198,7 @@ def sector_factors(
             ),
         ),
     ] = "",
-    include_query: Annotated[
+    include_query: Annotated[  # noqa: FBT002
         bool,
         Field(
             description="Include resolved query parameters in response.",
@@ -192,10 +206,9 @@ def sector_factors(
     ] = False,
     ctx: Context = _DEFAULT_CONTEXT,
 ) -> dict[str, Any]:
-    """Score market sectors across multi-factor momentum, relative strength, Sharpe, and risk."""
+    """Score market sectors across multi-factor momentum and risk."""
     client = resolve_client(ctx)
-    resolved_end = date or today_date_string()
-    resolved_start = ninety_days_ago_date_string()
+    resolved_start, resolved_end = _resolve_factor_dates(date)
     warnings: list[str] = []
 
     raw_rows = _fetch_sector_returns(client, resolved_start, resolved_end, warnings)

@@ -2,13 +2,13 @@
 
 ## OVERVIEW
 
-Core package with 6 private modules and 3 subpackages. Public API exposed only through `__init__.py` (57 exports).
+Core package with 6 private modules and 3 subpackages. Public API exposed only through `__init__.py` (55 exports).
 
 ## MODULE ROLES
 
 | Module | Purpose | Key Symbols |
 |--------|---------|-------------|
-| `__init__.py` | Public surface: re-exports everything | `__all__` (57 items), `main()` stub |
+| `__init__.py` | Public surface: re-exports everything | `__all__` (55 items), `main()` stub |
 | `_client.py` | Thin httpx wrapper | `VolumeLeadersClient` (4 methods: `post_json`, `post_form`, `post_datatables`, `post_datatables_raw`) |
 | `_auth.py` | Browser cookie extraction + XSRF | `extract_cookies()`, `fetch_xsrf_token()`, `BASE_URL`, `USER_AGENT` |
 | `_exceptions.py` | Exception hierarchy | `VolumeLeadersError` -> `CookieExtractionError`, `AuthenticationError`, `APIError` |

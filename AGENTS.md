@@ -11,7 +11,7 @@ Python API client library for [volumeleaders.com](https://www.volumeleaders.com)
 
 ```text
 src/volumeleaders/
-    __init__.py              # Public API surface (57 exports)
+    __init__.py              # Public API surface (55 exports)
     _client.py               # Thin httpx wrapper: auth state + POST methods (post_json, post_form, post_datatables, post_datatables_raw)
     _auth.py                 # browser-cookie3 extraction, XSRF token from HTML
     _exceptions.py           # VolumeLeadersError -> CookieExtractionError, AuthenticationError, APIError
