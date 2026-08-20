@@ -2,26 +2,31 @@
 
 ## OVERVIEW
 
-Standalone functions that build requests, call `client.post_json()` or `client.post_datatables()`, and return typed model lists. One file per API domain.
+Standalone functions that build requests, call `client.post_json()`, `client.post_form()`, or `client.post_datatables()`, and return typed model lists. One file per API domain.
 
 ## WHERE TO LOOK
 
 | Task | File | Notes |
 |------|------|-------|
-| Add JSON endpoint | Follow `exhaustion.py` | Simplest: build dict, call `post_json`, validate |
+| Add JSON endpoint | Follow `exhaustion.py` / `sector.py` | Simplest: build dict, call `post_json`, validate |
+| Add Form-encoded endpoint | Follow `sector.py` (`get_sector_daily_returns`) | Build urlencoded body string, call `post_form`, validate |
 | Add DataTables endpoint | Follow `earnings.py` | Define columns list, build `DataTablesRequest`, call `post_datatables` |
 | Add filtered DataTables | Follow `trades.py` | Full filter set via `custom_filters` dict |
 | Unique response parsing | `chart.py` | `get_price_data` unwraps nested arrays; `get_snapshot` uses envelope model |
 
-## TWO REQUEST PATTERNS
+## REQUEST PATTERNS
 
 **Pattern 1: JSON body** (simple endpoints)
-- Used by: `exhaustion.py`, `chart.py` (get_price_data, get_snapshot, get_company)
-- Flow: `dict -> client.post_json(path, payload) -> Model.model_validate(response)`
+- Used by: `exhaustion.py`, `chart.py` (get_price_data, get_snapshot, get_company), `sector.py`, `darkpool.py`
+- Flow: `dict -> client.post_json(path, payload) -> [Model.model_validate(row) for row in response]`
 - No column specs needed
 
-**Pattern 2: DataTables form-encoded** (table endpoints)
-- Used by: all other endpoint files
+**Pattern 2: Form-encoded body** (direct form POST endpoints)
+- Used by: `sector.py` (`get_sector_daily_returns`)
+- Flow: `urlencode(dict) -> client.post_form(path, body) -> [Model.model_validate(row) for row in response]`
+
+**Pattern 3: DataTables form-encoded** (table endpoints)
+- Used by: `trades.py`, `levels.py`, `volume.py`, `earnings.py`, `watchlist.py`, `alerts.py`
 - Flow: define `COLUMNS` list -> `DataTablesRequest(columns, custom_filters) -> client.post_datatables(path, request.encode()) -> [Model.model_validate(row) for row in rows]`
 - Column specs are module-level `ALL_CAPS` lists
 

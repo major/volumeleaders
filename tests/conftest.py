@@ -26,6 +26,14 @@ def _load_json_file(file_name: str) -> object:
     return json.loads((_fixtures_dir() / file_name).read_text(encoding="utf-8"))
 
 
+def _load_json_list(file_name: str) -> list[dict[str, Any]]:
+    """Load and parse a JSON fixture file expecting a list of dictionaries."""
+    data = _load_json_file(file_name)
+    if isinstance(data, list):
+        return [row for row in data if isinstance(row, dict)]
+    return []
+
+
 @pytest.fixture
 def sample_trade_response() -> dict[str, Any]:
     """Return parsed trade DataTables response payload."""
@@ -104,6 +112,42 @@ def sample_snapshot_string() -> str:
     return (_fixtures_dir() / "response_get_all_snapshots.json").read_text(
         encoding="utf-8",
     )
+
+
+@pytest.fixture
+def sample_sector_breakdown_response() -> list[dict[str, Any]]:
+    """Return parsed sector breakdown response payload."""
+    return _load_json_list("response_sector_breakdown.json")
+
+
+@pytest.fixture
+def sample_institutional_outliers_response() -> list[dict[str, Any]]:
+    """Return parsed institutional outliers response payload."""
+    return _load_json_list("response_institutional_outliers.json")
+
+
+@pytest.fixture
+def sample_sector_themes_response() -> list[dict[str, Any]]:
+    """Return parsed sector theme notional response payload."""
+    return _load_json_list("response_notional_by_sector_by_name.json")
+
+
+@pytest.fixture
+def sample_supply_demand_areas_response() -> list[dict[str, Any]]:
+    """Return parsed supply demand areas response payload."""
+    return _load_json_list("response_supply_demand_areas.json")
+
+
+@pytest.fixture
+def sample_sector_daily_returns_response() -> list[dict[str, Any]]:
+    """Return parsed sector daily returns response payload."""
+    return _load_json_list("response_sector_daily_returns.json")
+
+
+@pytest.fixture
+def sample_dark_pool_volume_report_response() -> list[dict[str, Any]]:
+    """Return parsed dark pool volume report response payload."""
+    return _load_json_list("response_dark_pool_volume_report.json")
 
 
 @pytest.fixture

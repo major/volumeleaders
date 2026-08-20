@@ -1,0 +1,602 @@
+[
+  {
+    "DateKey": 20260812,
+    "Sector": "Bonds",
+    "Dollars": 6144457341.97
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Bonds",
+    "Dollars": 6208724037.31
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Bonds",
+    "Dollars": 5290460601.46
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Bonds",
+    "Dollars": 5974420055.66
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Bonds",
+    "Dollars": 7272844552.54
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Bonds",
+    "Dollars": 11336837548.46
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Broad Market/Diversified",
+    "Dollars": 18099655337.25
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Broad Market/Diversified",
+    "Dollars": 16461000740.18
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Broad Market/Diversified",
+    "Dollars": 13401690170.76
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Broad Market/Diversified",
+    "Dollars": 16452520972.62
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Broad Market/Diversified",
+    "Dollars": 26370606459.82
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Broad Market/Diversified",
+    "Dollars": 25117712329.19
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Commodities",
+    "Dollars": 79293399.52
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Commodities",
+    "Dollars": 66796236.47
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Commodities",
+    "Dollars": 51943438.92
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Commodities",
+    "Dollars": 47854460.64
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Commodities",
+    "Dollars": 60011324.28
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Commodities",
+    "Dollars": 65174877.52
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Communication Services",
+    "Dollars": 9930283675.75
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Communication Services",
+    "Dollars": 8213977678.04
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Communication Services",
+    "Dollars": 8917296986.21
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Communication Services",
+    "Dollars": 13454047184.33
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Communication Services",
+    "Dollars": 10803326088.65
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Communication Services",
+    "Dollars": 13262820220.27
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Consumer Discretionary",
+    "Dollars": 12123652694.55
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Consumer Discretionary",
+    "Dollars": 12368367516.33
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Consumer Discretionary",
+    "Dollars": 11202751311.66
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Consumer Discretionary",
+    "Dollars": 13841686982.3
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Consumer Discretionary",
+    "Dollars": 11764023795.33
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Consumer Discretionary",
+    "Dollars": 12601315469.76
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Consumer Staples",
+    "Dollars": 5164573869.12
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Consumer Staples",
+    "Dollars": 4658325523.71
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Consumer Staples",
+    "Dollars": 4067168152.5
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Consumer Staples",
+    "Dollars": 5822391525.18
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Consumer Staples",
+    "Dollars": 6062037744.2
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Consumer Staples",
+    "Dollars": 7071165973.92
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Currencies",
+    "Dollars": 14161820.04
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Currencies",
+    "Dollars": 11915862.24
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Currencies",
+    "Dollars": 22589090.41
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Currencies",
+    "Dollars": 5385183.04
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Currencies",
+    "Dollars": 4790838.04
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Currencies",
+    "Dollars": 9293915.8
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Digital Assets",
+    "Dollars": 372478116.13
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Digital Assets",
+    "Dollars": 328578491.07
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Digital Assets",
+    "Dollars": 337703814.63
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Digital Assets",
+    "Dollars": 518209314.81
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Digital Assets",
+    "Dollars": 425394036.07
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Digital Assets",
+    "Dollars": 1015684327.99
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Energy",
+    "Dollars": 6461927590.01
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Energy",
+    "Dollars": 5679244616.6
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Energy",
+    "Dollars": 5105463688.61
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Energy",
+    "Dollars": 6826305985.36
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Energy",
+    "Dollars": 6349782067.73
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Energy",
+    "Dollars": 6110585402.67
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Financial Services",
+    "Dollars": 12636460244.99
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Financial Services",
+    "Dollars": 15658957433.76
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Financial Services",
+    "Dollars": 13627091819.58
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Financial Services",
+    "Dollars": 18786940290.91
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Financial Services",
+    "Dollars": 14441492743.4
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Financial Services",
+    "Dollars": 20269092682.27
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Healthcare",
+    "Dollars": 12863389198.84
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Healthcare",
+    "Dollars": 12290101546.29
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Healthcare",
+    "Dollars": 10498496331.86
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Healthcare",
+    "Dollars": 14255868897.44
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Healthcare",
+    "Dollars": 12773716364.0
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Healthcare",
+    "Dollars": 16817425083.5
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Industrials",
+    "Dollars": 14382156255.4
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Industrials",
+    "Dollars": 13187823550.97
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Industrials",
+    "Dollars": 12761753870.2
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Industrials",
+    "Dollars": 15392368440.55
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Industrials",
+    "Dollars": 14266309909.14
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Industrials",
+    "Dollars": 15091346051.28
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Leveraged/Inverse",
+    "Dollars": 1619773513.52
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Leveraged/Inverse",
+    "Dollars": 1622068496.84
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Leveraged/Inverse",
+    "Dollars": 1260810060.71
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Leveraged/Inverse",
+    "Dollars": 1469448154.79
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Leveraged/Inverse",
+    "Dollars": 1949785758.21
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Leveraged/Inverse",
+    "Dollars": 1788998414.82
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Materials",
+    "Dollars": 5936522217.02
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Materials",
+    "Dollars": 6391012329.63
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Materials",
+    "Dollars": 4370026267.57
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Materials",
+    "Dollars": 6307930791.23
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Materials",
+    "Dollars": 4919750415.79
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Materials",
+    "Dollars": 7632665374.18
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Multi-Asset/Structured",
+    "Dollars": 10564652.95
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Multi-Asset/Structured",
+    "Dollars": 8508576.0
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Multi-Asset/Structured",
+    "Dollars": 9752268.04
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Multi-Asset/Structured",
+    "Dollars": 13923317.22
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Multi-Asset/Structured",
+    "Dollars": 66433116.76
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Multi-Asset/Structured",
+    "Dollars": 21056788.87
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Real Estate",
+    "Dollars": 4844683239.93
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Real Estate",
+    "Dollars": 3581474783.28
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Real Estate",
+    "Dollars": 3338345858.67
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Real Estate",
+    "Dollars": 4151365695.02
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Real Estate",
+    "Dollars": 2548786839.56
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Real Estate",
+    "Dollars": 7012930955.47
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Regional",
+    "Dollars": 4557867095.33
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Regional",
+    "Dollars": 2993905301.03
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Regional",
+    "Dollars": 1835847487.61
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Regional",
+    "Dollars": 3354675322.78
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Regional",
+    "Dollars": 4694286577.73
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Regional",
+    "Dollars": 5502742406.78
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Technology",
+    "Dollars": 65181862275.9
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Technology",
+    "Dollars": 51855902866.39
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Technology",
+    "Dollars": 44439654115.37
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Technology",
+    "Dollars": 59410349646.16
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Technology",
+    "Dollars": 71505496806.36
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Technology",
+    "Dollars": 56905045421.62
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Utilities",
+    "Dollars": 3635968769.52
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Utilities",
+    "Dollars": 3271035946.5
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Utilities",
+    "Dollars": 3061594370.88
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Utilities",
+    "Dollars": 4078226917.22
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Utilities",
+    "Dollars": 3806105106.36
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Utilities",
+    "Dollars": 3817453455.92
+  },
+  {
+    "DateKey": 20260812,
+    "Sector": "Volatility",
+    "Dollars": 71874089.47
+  },
+  {
+    "DateKey": 20260813,
+    "Sector": "Volatility",
+    "Dollars": 91532369.25
+  },
+  {
+    "DateKey": 20260814,
+    "Sector": "Volatility",
+    "Dollars": 51330282.53
+  },
+  {
+    "DateKey": 20260817,
+    "Sector": "Volatility",
+    "Dollars": 55898264.98
+  },
+  {
+    "DateKey": 20260818,
+    "Sector": "Volatility",
+    "Dollars": 184069317.9
+  },
+  {
+    "DateKey": 20260819,
+    "Sector": "Volatility",
+    "Dollars": 46358104.13
+  }
+]

@@ -69,12 +69,31 @@ with VolumeLeadersClient() as client:
 | `get_alert_configs` | Alert configurations |
 | `get_watchlist_configs` | Watchlist configurations |
 | `get_watchlist_tickers` | Tickers in a watchlist |
+| `get_sector_breakdown` | Daily institutional dollar volume by sector |
+| `get_institutional_outliers` | Statistical block trade volume outliers |
+| `get_notional_by_sector_by_name` | Hierarchical sector, theme, and ticker capital flows |
+| `get_supply_demand_areas` | Automated sector supply and demand support scores |
+| `get_sector_daily_returns` | Multi-factor sector metrics, momentum, Sharpe, and risk |
+| `get_dark_pool_volume_report` | Binned dark pool volume distribution profiles |
 
 All endpoint functions take a `VolumeLeadersClient` as the first argument and return typed Pydantic models.
 
 ## MCP Server
 
-The library includes an [MCP](https://modelcontextprotocol.io/) server that exposes VolumeLeaders data as tools for AI coding assistants. Five tools are available: `trades`, `trade_clusters`, `trade_cluster_bombs`, `trade_levels`, and `trade_level_touches`.
+The library includes an [MCP](https://modelcontextprotocol.io/) server that exposes VolumeLeaders data as tools for AI coding assistants. 12 tools are available:
+
+- `trades`: Institutional block trade scanner with context-aware defaults.
+- `trade_clusters`: Institutional trade cluster scanner for a given day.
+- `trade_cluster_bombs`: Large trade cluster bomb events over date ranges.
+- `trade_levels`: Institutional trade levels for a ticker symbol.
+- `trade_level_touches`: Intraday trade level touch scanner.
+- `sector_flows`: Daily institutional dollar flows and market share across sectors.
+- `institutional_outliers`: Statistical block trade volume anomalies (Z-scores).
+- `sector_themes`: Hierarchical capital allocation (Sector -> Theme -> Tickers).
+- `sector_support_scores`: Automated supply and demand support score distributions.
+- `sector_factors`: Multi-factor sector scorecard (Momentum, Sharpe, Beta, Volatility).
+- `sector_rotation_rrg`: JdK Relative Rotation Graph (RRG) modeling against SPY.
+- `dark_pool_profile`: Dark pool price-volume profile and Point-of-Control (POC).
 
 ### Quick start with uv
 

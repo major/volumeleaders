@@ -17,6 +17,7 @@ from volumeleaders.mcp import VLContext
 _BILLION = 1_000_000_000
 _MILLION = 1_000_000
 _THOUSAND = 1_000
+_DATE_KEY_LENGTH = 8
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -97,6 +98,17 @@ def format_date(dt: datetime | None) -> str | None:
     if dt is None:
         return None
     return dt.strftime("%Y-%m-%d")
+
+
+def format_datekey_to_iso(datekey: int | str) -> str:
+    """Convert a YYYYMMDD integer or string date key to YYYY-MM-DD.
+
+    Example: 20260819 -> "2026-08-19"
+    """
+    s = str(datekey).strip()
+    if len(s) == _DATE_KEY_LENGTH and s.isdigit():
+        return f"{s[:4]}-{s[4:6]}-{s[6:8]}"
+    return s
 
 
 def format_dollars(amount: float) -> str:

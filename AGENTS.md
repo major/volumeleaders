@@ -11,8 +11,8 @@ Python API client library for [volumeleaders.com](https://www.volumeleaders.com)
 
 ```text
 src/volumeleaders/
-    __init__.py              # Public API surface (45 exports)
-    _client.py               # Thin httpx wrapper: auth state + two POST methods
+    __init__.py              # Public API surface (55 exports)
+    _client.py               # Thin httpx wrapper: auth state + POST methods (post_json, post_form, post_datatables, post_datatables_raw)
     _auth.py                 # browser-cookie3 extraction, XSRF token from HTML
     _exceptions.py           # VolumeLeadersError -> CookieExtractionError, AuthenticationError, APIError
     _parsing.py              # /Date(ms)/ parser, snapshot string parser, datekey helpers
@@ -21,16 +21,28 @@ src/volumeleaders/
     endpoints/               # Endpoint functions by domain (see endpoints/AGENTS.md)
     mcp/
         __init__.py          # FastMCP server instance + lifespan
-        utils.py             # Shared helpers (client access, error handling, exhaustion)
+        utils.py             # Shared helpers (client access, error handling, dates, dollars)
         tools/
             __init__.py      # Imports all tool modules to trigger registration
-            trade_level_touches.py  # trade_level_touches tool
+            dark_pool_profile.py
+            institutional_outliers.py
+            sector_factors.py
+            sector_flows.py
+            sector_rotation_rrg.py
+            sector_support_scores.py
+            sector_themes.py
+            trade_cluster_bombs.py
+            trade_clusters.py
+            trade_level_touches.py
+            trade_levels.py
+            trades.py
 
 tests/                       # Mirrors src/ layout, real API payloads as fixtures
-    conftest.py              # 11 fixtures loading JSON from tests/fixtures/
+    conftest.py              # 17 fixtures loading JSON from tests/fixtures/
     fixtures/                # Real API JSON response payloads for test validation
     test_models/             # Model.model_validate(real_row) tests
     test_endpoints/          # Mock client, verify typed returns
+    test_mcp/                # Tool execution and curation tests
 ```
 
 ## WHERE TO LOOK

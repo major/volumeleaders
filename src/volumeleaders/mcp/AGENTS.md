@@ -12,11 +12,18 @@ mcp/
     utils.py                 # Shared helpers for all tools (client access, error handling, dates, dollars)
     tools/
         __init__.py          # Imports all tool modules to trigger registration
-        trade_cluster_bombs.py  # trade_cluster_bombs tool
-        trade_clusters.py    # trade_clusters tool
-        trade_level_touches.py  # trade_level_touches tool
-        trade_levels.py      # trade_levels tool
-        trades.py            # trades tool (institutional block trades)
+        dark_pool_profile.py
+        institutional_outliers.py
+        sector_factors.py
+        sector_flows.py
+        sector_rotation_rrg.py
+        sector_support_scores.py
+        sector_themes.py
+        trade_cluster_bombs.py
+        trade_clusters.py
+        trade_level_touches.py
+        trade_levels.py
+        trades.py
 ```
 
 ## MODULE ROLES
@@ -24,8 +31,15 @@ mcp/
 | Module | Purpose | Key Symbols |
 |--------|---------|-------------|
 | `__init__.py` | Server setup and lifecycle management | `VLContext`, `_lifespan()`, `mcp`, `main()` |
-| `utils.py` | Shared utilities across tools | `resolve_client()`, `fetch_exhaustion_data()`, `capture_non_auth_error()`, `today_date_string()`, `one_week_ago_date_string()`, `ninety_days_ago_date_string()`, `count_rows()`, `format_date()`, `format_dollars()`, `curate_exhaustion()` |
+| `utils.py` | Shared utilities across tools | `resolve_client()`, `fetch_exhaustion_data()`, `capture_non_auth_error()`, `today_date_string()`, `one_week_ago_date_string()`, `ninety_days_ago_date_string()`, `one_year_ago_date_string()`, `count_rows()`, `format_date()`, `format_datekey_to_iso()`, `format_dollars()`, `curate_exhaustion()` |
 | `tools/__init__.py` | Tool registration imports | Imports all tool modules as side effect |
+| `tools/dark_pool_profile.py` | Dark pool volume profile scanner | `dark_pool_profile()` |
+| `tools/institutional_outliers.py` | Statistical outlier trade volume scanner | `institutional_outliers()` |
+| `tools/sector_factors.py` | Multi-factor sector momentum and risk scorecard | `sector_factors()` |
+| `tools/sector_flows.py` | Sector dollar volume flow tracker | `sector_flows()` |
+| `tools/sector_rotation_rrg.py` | JdK Relative Rotation Graph (RRG) modeler | `sector_rotation_rrg()` |
+| `tools/sector_support_scores.py` | Automated supply and demand support score analyzer | `sector_support_scores()` |
+| `tools/sector_themes.py` | Hierarchical sector, theme, and ticker flow tree | `sector_themes()` |
 | `tools/trade_cluster_bombs.py` | Trade cluster bomb scanner | `trade_cluster_bombs()` and private `_curate_bomb()` |
 | `tools/trade_clusters.py` | Trade cluster scanner | `trade_clusters()` and private `_curate_cluster()` |
 | `tools/trade_level_touches.py` | Trade level touch scanner | `trade_level_touches()` and private curation/filter helpers |
@@ -50,6 +64,20 @@ Tools return a dict envelope with stable keys:
 - `metadata`: response metadata such as truncation and selected limits
 
 ## TOOLS
+
+- `sector_flows`: Scanner for daily institutional dollar volume flows and market share allocation across market sectors over time. start_date defaults to one week ago, end_date defaults to today. Returns compact sector records (date, sector, dollars formatted, market_share_pct). Supports start_date, end_date, sectors, and include_query parameters.
+
+- `institutional_outliers`: Scanner for statistical block trade volume anomalies where dollar volume exceeds historical standard deviations (Z-score sigmas). date defaults to today, lookback_days defaults to 7, min_sigmas defaults to 2.0. Returns compact anomaly records (ticker, date, sector, industry, sigmas, dollars formatted, price, trades, trade_rank). Supports date, lookback_days, min_sigmas, tickers, sectors, max_results, and include_query parameters.
+
+- `sector_themes`: Hierarchical institutional capital allocation inspector (Sector -> Subsector Theme -> Top Tickers). date defaults to today, top_themes defaults to 3, top_tickers defaults to 3. Returns a compact tree structure with dollar volumes, trade counts, and percentage shares. Supports date, sector, theme, top_themes, top_tickers, and include_query parameters.
+
+- `sector_support_scores`: Automated supply and demand analyzer scoring the percentage of institutional trade levels below latest close across tickers in each sector. Higher scores indicate stronger support. Defaults to latest available date. Returns compact distribution records (sector, date, ticker_count, support_median_pct, support_avg_pct, support_q1_pct, support_q3_pct, support_range, bias). Supports date, start_date, end_date, sectors, and include_query parameters.
+
+- `sector_factors`: Multi-factor scorecard comparing sectors across momentum, relative strength, Sharpe ratio, beta, realized volatility, daily return, and percent advancers. Defaults to latest date and blended timeframe. Returns compact factor rows. Supports date, timeframe (blended, 10d, 20d, 40d), metric (all, momentum, relative_strength, sharpe, beta, realized_vol, daily_returns, advancers), sectors, and include_query parameters.
+
+- `sector_rotation_rrg`: JdK Relative Rotation Graph (RRG) modeler categorizing sectors into 4 canonical quadrants (Leading, Weakening, Lagging, Improving) against SPY with trajectory headings and momentum velocity trails. window defaults to 20, roc_period defaults to 5, trail_length defaults to 3. Returns compact rotation records (sector, quadrant, rs_ratio, rs_momentum, trajectory, trail). Supports window, roc_period, trail_length, equity_only, sectors, and include_query parameters.
+
+- `dark_pool_profile`: Dark pool price-volume distribution histogram and Point-of-Control (POC) analyzer for specified tickers. Identifies key accumulation nodes and positioning relative to latest close. tickers is required. start_date defaults to one week ago, end_date defaults to today, top_nodes_only defaults to True. Returns compact profile records (ticker, last_close, total_dp_dollars, price_range, poc_price_range, poc_dp_dollars, poc_relation, top_accumulation_nodes). Supports tickers (required), start_date, end_date, top_nodes_only, bins, and include_query parameters.
 
 - `trade_clusters`: Scanner for institutional trade clusters on a given day. A trade cluster is a group of institutional block trades in the same security occurring within a time window. date defaults to today (used as both start and end date). Returns compact cluster rows (ticker, time_range, trade_count, price, dollars formatted, volume, rank, dollars_multiplier, cumulative_distribution, last_comparable_date). Supports tickers, date, max_results, and include_query parameters.
 
