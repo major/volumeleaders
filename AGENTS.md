@@ -42,7 +42,7 @@ tests/                       # Mirrors src/ layout, real API payloads as fixture
 | Fix auth issues | `_auth.py` | Cookie names: `__RequestVerificationToken`, `ASP.NET_SessionId`, `.ASPXAUTH` |
 | Parse new date format | `_parsing.py` | ASP.NET sentinels: -62135596800000 (0001-01-01), -2208988800000 (1900-01-01) |
 | Add test fixtures | `tests/conftest.py` + `tests/fixtures/` | Capture real JSON, add `@pytest.fixture` loader |
-| Change CI pipeline | `Makefile` + `.github/workflows/ci.yml` | `ci` target: lint -> typecheck -> radon -> test |
+| Change CI pipeline | `.pre-commit-config.yaml` + `.github/workflows/ci.yml` | Pre-commit runs lint, typecheck, complexity, and coverage checks |
 | Add MCP tool | `src/volumeleaders/mcp/tools/<name>.py` | One file per tool, shared helpers in `mcp/utils.py` |
 
 ## CONVENTIONS
@@ -53,8 +53,8 @@ tests/                       # Mirrors src/ layout, real API payloads as fixture
 - **Model aliases**: Every field uses `Field(alias="PascalCaseAPIName")` with `populate_by_name=True`
 - **Test imports**: Use `importlib.import_module()` not direct imports (avoids sys.path issues with src-layout)
 - **Test data**: Real API payloads in `tests/fixtures/`, never synthetic/minimal JSON
-- **Complexity cap**: Radon enforces A/B rating. Functions at C or higher fail CI.
-- **Type checker**: `ty` (Red Hat's type checker, not pyright despite pyrightconfig.json existing)
+- **Complexity cap**: Xenon enforces A/B rating. Functions at C or higher fail CI.
+- **Type checker**: Pyright
 
 ## ANTI-PATTERNS
 
@@ -75,18 +75,12 @@ tests/                       # Mirrors src/ layout, real API payloads as fixture
 ## COMMANDS
 
 ```bash
-make lint          # ruff check src/ tests/
-make format        # ruff format src/ tests/
-make typecheck     # ty check src/
-make radon         # fail if any function >= C complexity
-make test          # pytest --cov
-make ci            # lint + typecheck + radon + test
-make docs          # properdocs build (requires docs dep group)
+uv run pre-commit run --all-files  # lint, typecheck, complexity, and coverage checks
 ```
 
 ## NOTES
 
-- CI runs on GitHub Actions (`.github/workflows/ci.yml`): lint, typecheck, radon, test. Mirrors `make ci`.
+- CI runs on GitHub Actions (`.github/workflows/ci.yml`) through pre-commit.
 - Requires Python >= 3.14 (current stable).
 - Auth requires user to be logged into volumeleaders.com in Firefox first. No programmatic login.
 - MCP server: `uv run volumeleaders-mcp` or `uv run fastmcp dev src/volumeleaders/mcp/__init__.py`.

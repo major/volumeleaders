@@ -23,20 +23,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev --all-extras
 
-      - name: Lint
-        run: uv run ruff check src/ tests/
-
-      - name: Type check
-        run: uv run ty check src/
-
-      - name: Complexity check
-        run: |
-          uv run radon cc src/ -s --min C | grep -q . \
-            && { echo "FAIL: Cyclomatic complexity C or higher detected"; exit 1; } \
-            || echo "PASS: All functions rated A or B"
-
-      - name: Test
-        run: uv run pytest --cov=volumeleaders --cov-report=xml --cov-report=term-missing
+      - name: Run pre-commit checks
+        run: uv run pre-commit run --all-files
 
       - name: Upload coverage
         if: always()
