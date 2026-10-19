@@ -34,7 +34,7 @@ def _company_payload(
     return {**sample_company_response, "CurrentPrice": current_price}
 
 
-def _wire_post_json(  # noqa: PLR0913
+def _wire_post_json(
     client: object,
     *,
     sample_company_response: dict[str, Any],

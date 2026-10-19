@@ -25,6 +25,11 @@ _MAX_RESULTS = 7
 _SNAPSHOT_PRICE = 155.08
 _WEEK_AGO = "2026-03-26"
 _TODAY = "2026-04-02"
+_TRADE_COUNT = 8
+_VOLUME = 506100
+_RANK = 2
+_DOLLARS_MULTIPLIER = 0.75
+_CUMULATIVE_DISTRIBUTION = 0.5
 
 
 def _form_body(client: Mock) -> dict[str, list[str]]:
@@ -73,14 +78,14 @@ def test_trade_cluster_bombs_success(
     assert bomb["ticker"] == "NVS"
     assert bomb["date"] == "2026-04-02"
     assert bomb["time_range"] == "09:41 - 11:27"
-    assert bomb["trade_count"] == 8
+    assert bomb["trade_count"] == _TRADE_COUNT
     assert bomb["sector"] == "Healthcare"
     assert bomb["industry"] == "Pharma"
     assert bomb["dollars"] == "$77.9M"
-    assert bomb["volume"] == 506100
-    assert bomb["rank"] == 2
-    assert bomb["dollars_multiplier"] == 0.75
-    assert bomb["cumulative_distribution"] == 0.5
+    assert bomb["volume"] == _VOLUME
+    assert bomb["rank"] == _RANK
+    assert bomb["dollars_multiplier"] == _DOLLARS_MULTIPLIER
+    assert bomb["cumulative_distribution"] == _CUMULATIVE_DISTRIBUTION
     assert bomb["last_comparable_date"] == "2010-12-15"
     # No snapshot was primed, so no live price is available.
     assert bomb["current_price"] is None

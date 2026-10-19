@@ -28,7 +28,10 @@ target-version = "py314"
 
 [tool.ruff.lint]
 select = ["ALL"]
-per-file-ignores = { "tests/**/*.py" = ["S101"] }
+ignore = [
+    "CPY",  # No project copyright policy; sister project (tickerscope) omits headers
+]
+per-file-ignores = { "tests/**/*.py" = ["S101", "PLR0913"] }
 
 [dependency-groups]
 dev = [

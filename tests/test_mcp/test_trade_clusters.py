@@ -25,6 +25,10 @@ _MAX_RESULTS = 7
 _CLUSTER_PRICE = 655.1
 _SNAPSHOT_PRICE = 655.2
 _EXPLICIT_DATE = "2026-03-15"
+_TRADE_COUNT = 29
+_RANK = 9999
+_DOLLARS_MULTIPLIER = 7.12
+_CUMULATIVE_DISTRIBUTION = 0.9701
 
 
 def _form_body(client: Mock) -> dict[str, list[str]]:
@@ -69,12 +73,12 @@ def test_trade_clusters_success(
     assert cluster["ticker"] == "SPY"
     assert cluster["sector"] == "Large Caps"
     assert cluster["time_range"] == "10:28 - 17:55"
-    assert cluster["trade_count"] == 29
+    assert cluster["trade_count"] == _TRADE_COUNT
     assert cluster["cluster_price"] == _CLUSTER_PRICE
     assert cluster["dollars"] == "$2.2B"
-    assert cluster["rank"] == 9999
-    assert cluster["dollars_multiplier"] == 7.12
-    assert cluster["cumulative_distribution"] == 0.9701
+    assert cluster["rank"] == _RANK
+    assert cluster["dollars_multiplier"] == _DOLLARS_MULTIPLIER
+    assert cluster["cumulative_distribution"] == _CUMULATIVE_DISTRIBUTION
     assert cluster["last_comparable_date"] == "2026-03-31"
     # No snapshot was primed, so no live price is available.
     assert cluster["current_price"] is None
