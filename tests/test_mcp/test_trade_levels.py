@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from importlib import import_module
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 from fastmcp import Client
@@ -12,95 +11,15 @@ from fastmcp import Client
 _mcp_module = import_module("volumeleaders.mcp")
 _mcp_utils = import_module("volumeleaders.mcp.utils")
 _tools = import_module("volumeleaders.mcp.tools.trade_levels")
-_models = import_module("volumeleaders.models")
 
 trade_levels_tool = _tools.trade_levels
-TradeLevel = _models.TradeLevel
-
-_curate_level = vars(_tools)["_curate_level"]
-_get_current_price = vars(_tools)["_get_current_price"]
 
 _LEVEL_COUNT = 3
 _CURRENT_PRICE = 209.95
+_FIRST_LEVEL_PRICE = 36.8
+_FIRST_LEVEL_VOLUME = 39671
 
 _FAKE_CURRENT_PRICE = 23.50
-
-
-# -- _curate_level -------------------------------------------------------------
-
-
-def test_curate_level_field_set(
-    sample_trade_level_response: dict[str, Any],
-) -> None:
-    """Return exactly the expected compact fields from TradeLevel model."""
-    level = TradeLevel.model_validate(sample_trade_level_response["data"][0])
-    result = _curate_level(level)
-
-    assert set(result) == {
-        "price",
-        "dollars",
-        "volume",
-        "trades",
-        "rank",
-        "relative_size",
-        "cumulative_distribution",
-        "level_origin_date",
-        "level_last_confirmed",
-    }
-
-
-def test_curate_level_preserves_values(
-    sample_trade_level_response: dict[str, Any],
-) -> None:
-    """Map model attributes to curated dict values correctly."""
-    level = TradeLevel.model_validate(sample_trade_level_response["data"][0])
-    result = _curate_level(level)
-
-    assert result["price"] == level.price
-    assert result["dollars"] == "$166.5M"
-    assert result["volume"] == level.volume
-    assert result["trades"] == level.trades
-    assert result["rank"] == level.trade_level_rank
-    assert result["relative_size"] == level.relative_size
-    assert result["cumulative_distribution"] == level.cumulative_distribution
-
-
-def test_curate_level_dollars_formatted(
-    sample_trade_level_response: dict[str, Any],
-) -> None:
-    """Format dollars as a compact human-readable string."""
-    level = TradeLevel.model_validate(sample_trade_level_response["data"][0])
-    result = _curate_level(level)
-
-    # Fixture has Dollars: 166529945.86; formatted to "$166.5M".
-    assert isinstance(result["dollars"], str)
-    assert result["dollars"] == "$166.5M"
-
-
-def test_curate_level_dates(
-    sample_trade_level_response: dict[str, Any],
-) -> None:
-    """Format min_date and max_date as self-documenting level date fields."""
-    level = TradeLevel.model_validate(sample_trade_level_response["data"][0])
-    result = _curate_level(level)
-
-    # Fixture MinDate: /Date(1709251200000)/ -> 2024-03-01
-    # Fixture MaxDate: /Date(1775088000000)/ -> 2026-04-02
-    assert result["level_origin_date"] == "2024-03-01"
-    assert result["level_last_confirmed"] == "2026-04-02"
-
-
-def test_curate_level_omits_removed_fields(
-    sample_trade_level_response: dict[str, Any],
-) -> None:
-    """Exclude fields dropped for token efficiency."""
-    level = TradeLevel.model_validate(sample_trade_level_response["data"][0])
-    result = _curate_level(level)
-
-    assert "ticker" not in result
-    assert "name" not in result
-    assert "dates" not in result  # replaced by level_origin_date/level_last_confirmed
-    assert "trade_level_rank" not in result  # renamed to "rank"
 
 
 # -- Tool integration tests ----------------------------------------------------
@@ -248,6 +167,35 @@ def test_curated_fields_in_response(
         "level_last_confirmed",
         "proximity_pct",
     }
+
+
+def test_curated_values_in_response(
+    sample_chart_trade_levels_response: list[dict[str, Any]],
+    sample_company_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Map model attributes to curated level values in the response."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _wire_post_json(
+        client,
+        sample_company_response=sample_company_response,
+        levels=sample_chart_trade_levels_response,
+        company_price=_FAKE_CURRENT_PRICE,
+    )
+
+    result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
+
+    level = result["data"]["levels"][0]
+    assert level["price"] == _FIRST_LEVEL_PRICE
+    assert level["dollars"] == "$1.5M"
+    assert level["volume"] == _FIRST_LEVEL_VOLUME
+    assert level["trades"] == 1
+    assert level["rank"] == 1
+    # The chart endpoint omits these optional fields; they stay null.
+    assert level["relative_size"] is None
+    assert level["cumulative_distribution"] is None
+    assert level["level_origin_date"] == "2026-05-19"
+    assert level["level_last_confirmed"] is None
 
 
 def test_default_dates(
@@ -486,24 +434,6 @@ def test_metadata_includes_current_price(
     assert result["metadata"]["current_price"] == _FAKE_CURRENT_PRICE
 
 
-def test_get_current_price_falls_back_to_snapshots_when_company_price_null(
-    sample_company_response: dict[str, Any],
-) -> None:
-    """Use the all-snapshots endpoint when company metadata has a null price."""
-    client = Mock()
-    _wire_post_json(
-        client,
-        sample_company_response=sample_company_response,
-        company_price=None,
-        snapshots=f"AMD:{_CURRENT_PRICE};SPY:655.01",
-    )
-
-    warnings: list[str] = []
-
-    assert _get_current_price(client, "AMD", warnings) == _CURRENT_PRICE
-    assert warnings == []
-
-
 def test_metadata_falls_back_to_snapshots_when_company_price_null(
     sample_chart_trade_levels_response: list[dict[str, Any]],
     sample_company_response: dict[str, Any],
@@ -522,6 +452,8 @@ def test_metadata_falls_back_to_snapshots_when_company_price_null(
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
     assert result["metadata"]["current_price"] == _CURRENT_PRICE
+    # A null company price is not an error; snapshots recover it silently.
+    assert "warnings" not in result
 
 
 def test_current_price_failure_warns(
