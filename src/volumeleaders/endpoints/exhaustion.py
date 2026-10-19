@@ -25,5 +25,5 @@ def get_exhaustion_scores(
 
     """
     payload = {"Date": date}
-    response = client.post_json("/ExecutiveSummary/GetExhaustionScores", payload)
+    response = client.post_json("/DailyHighlights/GetExhaustionScores", payload)
     return ExhaustionScore.model_validate(response)

@@ -19,12 +19,12 @@ Core package with 6 private modules and 3 subpackages. Public API exposed only t
 ## AUTH FLOW
 
 ```text
-Firefox cookies (browser-cookie3) -> extract_cookies() -> 3 cookies
+Firefox cookies (browser-cookie3) -> extract_cookies() -> 4 cookies
 GET /ExecutiveSummary -> parse hidden input -> XSRF token
 All API calls: cookies + x-xsrf-token + x-requested-with: XMLHttpRequest
 ```
 
-Required cookies: `__RequestVerificationToken`, `ASP.NET_SessionId`, `.ASPXAUTH`
+Required cookies: `__RequestVerificationToken`, `ASP.NET_SessionId`, `.ASPXAUTH`, `VLDeviceID`
 
 ## CONVENTIONS
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from volumeleaders._client import VolumeLeadersClient
 from volumeleaders._exceptions import (
     APIError,
     AuthenticationError,
@@ -22,17 +23,24 @@ _DATE_KEY_LENGTH = 8
 if TYPE_CHECKING:
     from fastmcp import Context
 
-    from volumeleaders._client import VolumeLeadersClient
     from volumeleaders.models import ExhaustionScore
 
 
 def resolve_client(ctx: Context) -> VolumeLeadersClient:
-    """Return the shared VolumeLeaders client from lifespan context."""
+    """Return the shared VolumeLeaders client, creating it on first access.
+
+    The MCP lifespan defers ``VolumeLeadersClient`` construction so a
+    transient auth problem at startup does not crash the server. This helper
+    materializes the client lazily on the first tool call and caches it on
+    the lifespan context for reuse by later calls.
+    """
     lifespan_context = getattr(ctx, "lifespan_context", None)
-    if isinstance(lifespan_context, VLContext):
-        return lifespan_context.client
-    msg = "MCP lifespan context is missing VolumeLeaders client"
-    raise RuntimeError(msg)
+    if not isinstance(lifespan_context, VLContext):
+        msg = "MCP lifespan context is missing VolumeLeaders client holder"
+        raise TypeError(msg)
+    if lifespan_context.client is None:
+        lifespan_context.client = VolumeLeadersClient()
+    return lifespan_context.client
 
 
 def is_auth_failure(error: Exception) -> bool:

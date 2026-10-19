@@ -17,10 +17,10 @@ except ModuleNotFoundError as exc:
     )
     raise SystemExit(1) from exc
 
-from volumeleaders._client import VolumeLeadersClient
-
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+
+    from volumeleaders._client import VolumeLeadersClient
 
 # When fastmcp loads this file by path (e.g. fastmcp run __init__.py:mcp),
 # it gets a different module identity than the installed package's
@@ -32,20 +32,33 @@ if __name__ != "volumeleaders.mcp":
 
 @dataclass
 class VLContext:
-    """Shared state available to all MCP tool invocations."""
+    """Shared state available to all MCP tool invocations.
 
-    client: VolumeLeadersClient
+    The ``client`` is created lazily on first tool call so that transient
+    auth failures (expired browser session, locked cookies database, network
+    blip) do not prevent the MCP server from starting. Tools resolve the
+    shared client via ``resolve_client(context)`` which initializes the
+    client on first use and caches it for subsequent calls.
+    """
+
+    client: VolumeLeadersClient | None = None
 
 
 @asynccontextmanager
 async def _lifespan(server: FastMCP) -> AsyncIterator[VLContext]:
-    """Initialize VolumeLeadersClient once at startup, close on shutdown."""
+    """Provide an empty VLContext; the client is created on first tool call.
+
+    Deferring ``VolumeLeadersClient`` construction keeps the MCP server
+    process alive even when auth cookies are missing or stale. Auth errors
+    surface as per-tool errors instead of crashing the whole server.
+    """
     del server
-    client = VolumeLeadersClient()
+    context = VLContext()
     try:
-        yield VLContext(client=client)
+        yield context
     finally:
-        client.close()
+        if context.client is not None:
+            context.client.close()
 
 
 mcp = FastMCP("volumeleaders", lifespan=_lifespan)

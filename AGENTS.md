@@ -51,7 +51,7 @@ tests/                       # Mirrors src/ layout, real API payloads as fixture
 |------|----------|-------|
 | Add new endpoint | `endpoints/<domain>.py` + `models/<domain>.py` | Follow existing pairs, add to both `__init__.py` re-exports |
 | Add new model | `models/<domain>.py` | Inherit `VLBaseModel`, use `Field(alias="APIName")` |
-| Fix auth issues | `_auth.py` | Cookie names: `__RequestVerificationToken`, `ASP.NET_SessionId`, `.ASPXAUTH` |
+| Fix auth issues | `_auth.py` | Cookie names: `__RequestVerificationToken`, `ASP.NET_SessionId`, `.ASPXAUTH`, `VLDeviceID` |
 | Parse new date format | `_parsing.py` | ASP.NET sentinels: -62135596800000 (0001-01-01), -2208988800000 (1900-01-01) |
 | Add test fixtures | `tests/conftest.py` + `tests/fixtures/` | Capture real JSON, add `@pytest.fixture` loader |
 | Change CI pipeline | `.pre-commit-config.yaml` + `.github/workflows/ci.yml` | Pre-commit runs lint, typecheck, complexity, and coverage checks |

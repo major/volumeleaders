@@ -10,6 +10,7 @@ import pytest
 from fastmcp import Client
 
 _mcp_module = import_module("volumeleaders.mcp")
+_mcp_utils = import_module("volumeleaders.mcp.utils")
 _tools = import_module("volumeleaders.mcp.tools.trade_level_touches")
 _models = import_module("volumeleaders.models")
 
@@ -430,7 +431,7 @@ async def test_fastmcp_client_transport(
 
     touches = _make_touches(sample_trade_level_touch_response)
     monkeypatch.setattr(_tools, "get_trade_level_touches", lambda *_, **__: touches)
-    monkeypatch.setattr(_mcp_module, "VolumeLeadersClient", _FakeClient)
+    monkeypatch.setattr(_mcp_utils, "VolumeLeadersClient", _FakeClient)
 
     async with Client(_mcp_module.mcp) as client:
         result = await client.call_tool(
