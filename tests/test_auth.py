@@ -3,6 +3,7 @@
 from importlib import import_module
 from unittest.mock import Mock
 
+import httpx
 import pytest
 
 _auth = import_module("volumeleaders._auth")
@@ -21,8 +22,8 @@ def test_extract_cookies_raises_for_unsupported_browser() -> None:
 
 def test_fetch_xsrf_token_extracts_hidden_input_value() -> None:
     """Extract XSRF token from authenticated HTML response content."""
-    http_client = Mock()
-    response = Mock()
+    http_client = Mock(spec=httpx.Client)
+    response = Mock(spec=httpx.Response)
     response.url = "https://www.volumeleaders.com/ExecutiveSummary"
     response.status_code = 200
     response.text = (
@@ -41,8 +42,8 @@ def test_fetch_xsrf_token_extracts_hidden_input_value() -> None:
 
 def test_fetch_xsrf_token_raises_when_redirected_to_login() -> None:
     """Raise AuthenticationError when the authenticated request redirects."""
-    http_client = Mock()
-    response = Mock()
+    http_client = Mock(spec=httpx.Client)
+    response = Mock(spec=httpx.Response)
     response.url = "https://www.volumeleaders.com/Login"
     response.status_code = 200
     response.text = "<html></html>"
