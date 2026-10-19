@@ -3,6 +3,7 @@
 from volumeleaders.models.alerts import AlertConfig, TradeAlert, TradeClusterAlert
 from volumeleaders.models.base import AspNetDate, VLBaseModel
 from volumeleaders.models.chart import (
+    ChartTrade,
     Company,
     LastTrade,
     PriceBar,
@@ -28,6 +29,7 @@ from volumeleaders.models.watchlist import WatchListConfig, WatchListTicker
 __all__ = [
     "AlertConfig",
     "AspNetDate",
+    "ChartTrade",
     "Company",
     "DarkPoolVolumeBin",
     "Earnings",

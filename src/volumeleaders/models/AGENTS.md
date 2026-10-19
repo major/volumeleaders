@@ -9,7 +9,7 @@ One model file per endpoint domain. Every model inherits `VLBaseModel` and maps 
 ```text
 base.py          # VLBaseModel + AspNetDate annotated type
 trades.py        # Trade (89 fields), TradeCluster, TradeClusterBomb
-chart.py         # PriceBar, Company, Quote, LastTrade, Snapshot, SnapshotResponse
+chart.py         # PriceBar, ChartTrade, Company, Quote, LastTrade, Snapshot, SnapshotResponse
 levels.py        # TradeLevel, TradeLevelTouch
 volume.py        # InstitutionalVolume(Trade), TotalVolume(Trade) - empty subclasses
 earnings.py      # Earnings (9 fields, simplest model)

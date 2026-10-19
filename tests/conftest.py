@@ -77,6 +77,12 @@ def sample_price_bar_response() -> list[Any]:
 
 
 @pytest.fixture
+def sample_chart_trade_levels_response() -> list[dict[str, Any]]:
+    """Return parsed chart trade levels bare-array response payload."""
+    return _load_json_list("response_chart_trade_levels.json")
+
+
+@pytest.fixture
 def sample_earnings_response() -> dict[str, Any]:
     """Return parsed earnings response payload."""
     return _load_json_file("response_earnings.json")

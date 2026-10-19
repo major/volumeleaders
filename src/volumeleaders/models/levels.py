@@ -9,16 +9,19 @@ class TradeLevel(VLBaseModel):
     """Price level aggregate data for a ticker."""
 
     ticker: str | None = Field(alias="Ticker")
-    name: str | None = Field(alias="Name")
+    name: str | None = Field(default=None, alias="Name")
     price: float = Field(alias="Price")
     dollars: float = Field(alias="Dollars")
     volume: int = Field(alias="Volume")
     trades: int = Field(alias="Trades")
-    relative_size: float = Field(alias="RelativeSize")
-    cumulative_distribution: float = Field(alias="CumulativeDistribution")
+    relative_size: float | None = Field(default=None, alias="RelativeSize")
+    cumulative_distribution: float | None = Field(
+        default=None,
+        alias="CumulativeDistribution",
+    )
     trade_level_rank: int = Field(alias="TradeLevelRank")
     min_date: AspNetDate = Field(alias="MinDate")
-    max_date: AspNetDate = Field(alias="MaxDate")
+    max_date: AspNetDate = Field(default=None, alias="MaxDate")
     dates: str = Field(alias="Dates")
 
 
