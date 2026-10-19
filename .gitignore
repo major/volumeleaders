@@ -225,3 +225,6 @@ planning/
 .git-bak/
 
 *.har
+
+# Worktree lanes (local-only coding lanes; not tracked)
+.worktrees/
