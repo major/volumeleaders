@@ -13,6 +13,8 @@ TradeLevel = _models.TradeLevel
 
 _EXPECTED_FIRST_PRICE = 36.8
 _REQUESTED_LEVELS = 10
+_DEFAULT_LEVELS = 5
+_DEFAULT_TRADE_COUNT = 5
 
 
 def test_get_chart_levels_posts_json_and_returns_typed_models(
@@ -98,8 +100,8 @@ def test_get_chart_trades_unwraps_envelope_index_one(
     assert args[1]["Ticker"] == "SPY"
     assert args[1]["StartDateKey"] == "20260401"
     assert args[1]["EndDateKey"] == "20260401"
-    assert args[1]["Levels"] == 5
-    assert args[1]["TradeCount"] == 5
+    assert args[1]["Levels"] == _DEFAULT_LEVELS
+    assert args[1]["TradeCount"] == _DEFAULT_TRADE_COUNT
     assert len(trades) == len(sample_price_bar_response[1])
     assert all(isinstance(t, ChartTrade) for t in trades)
 
