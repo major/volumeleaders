@@ -10,13 +10,9 @@ requires-python = ">=3.14"
 dependencies = [
     "browser-cookie3>=0.20.1",
     "beautifulsoup4",
+    "fastmcp>=3.2",
     "httpx>=0.28.1",
     "pydantic>=2.0",
-]
-
-[project.optional-dependencies]
-mcp = [
-    "fastmcp>=3.2",
 ]
 
 [project.scripts]
