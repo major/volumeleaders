@@ -79,6 +79,11 @@ def one_year_ago_date_string() -> str:
     return (datetime.now(tz=UTC) - timedelta(days=365)).strftime("%Y-%m-%d")
 
 
+def five_years_ago_date_string() -> str:
+    """Return the UTC date five years ago in YYYY-MM-DD format."""
+    return (datetime.now(tz=UTC) - timedelta(days=365 * 5)).strftime("%Y-%m-%d")
+
+
 def count_rows(rows: list[Any] | None) -> int | None:
     """Return list length when present, otherwise None."""
     if rows is None:

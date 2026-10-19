@@ -8,16 +8,15 @@ from fastmcp.dependencies import CurrentContext
 from pydantic import Field
 
 from volumeleaders._exceptions import APIError
-from volumeleaders.endpoints.chart import get_company
-from volumeleaders.endpoints.levels import get_trade_levels
+from volumeleaders.endpoints.chart import get_chart_levels, get_company
 from volumeleaders.endpoints.trades import get_all_snapshots
 from volumeleaders.mcp import mcp
 from volumeleaders.mcp.utils import (
     capture_non_auth_error,
     count_rows,
+    five_years_ago_date_string,
     format_date,
     format_dollars,
-    one_year_ago_date_string,
     resolve_client,
     today_date_string,
 )
@@ -115,7 +114,7 @@ def _get_current_price(
 
 
 @mcp.tool
-def trade_levels(  # noqa: PLR0913
+def trade_levels(
     ticker: Annotated[
         str,
         Field(
@@ -131,7 +130,8 @@ def trade_levels(  # noqa: PLR0913
             description=(
                 "Start of the lookback window in YYYY-MM-DD format. "
                 "Trade levels are computed from block trades within "
-                "this window. Defaults to one year ago."
+                "this window. Defaults to five years ago; pass an "
+                "explicit earlier or later date to widen or narrow it."
             ),
         ),
     ] = "",
@@ -143,38 +143,6 @@ def trade_levels(  # noqa: PLR0913
             ),
         ),
     ] = "",
-    min_dollars: Annotated[
-        float,
-        Field(
-            ge=0,
-            description="Minimum dollar value filter for levels. Defaults to $500K.",
-        ),
-    ] = 500_000,
-    relative_size: Annotated[
-        int,
-        Field(
-            ge=0,
-            le=100,
-            description=(
-                "Minimum relative size filter (0-100). Relative size "
-                "measures this level's dollar volume as a share of the "
-                "ticker's total institutional volume. "
-                "Defaults to 0 (no filter)."
-            ),
-        ),
-    ] = 0,
-    trade_level_rank: Annotated[
-        int,
-        Field(
-            ge=-1,
-            le=100,
-            description=(
-                "Maximum trade level rank filter. Only levels ranked "
-                "at or above this threshold are returned. "
-                "-1 = no filter. Defaults to -1."
-            ),
-        ),
-    ] = -1,
     trade_level_count: Annotated[
         int,
         Field(
@@ -201,6 +169,13 @@ def trade_levels(  # noqa: PLR0913
     prices where large block trades have historically occurred,
     indicating significant institutional interest.
 
+    This tool calls the same ``GetChartTradeLevels`` endpoint used by
+    the VolumeLeaders chart page and by the vl-tv-bridge extension,
+    so the picture it returns matches what those clients render. The
+    default five-year lookback matches the chart default; pass an
+    explicit ``start_date`` to shorten (e.g. for recent-only levels)
+    or extend the window further back.
+
     Key fields per level:
     - rank: significance of the level (1 = largest by dollars,
       0 = unranked)
@@ -212,22 +187,19 @@ def trade_levels(  # noqa: PLR0913
     - level_origin_date / level_last_confirmed: date range of the
       block trades composing this level
     """
-    eff_start = start_date or one_year_ago_date_string()
+    eff_start = start_date or five_years_ago_date_string()
     eff_end = end_date or today_date_string()
     warnings: list[str] = []
     client = resolve_client(ctx)
 
     levels_data: list[dict[str, Any]] | None = None
     try:
-        raw_levels = get_trade_levels(
+        raw_levels = get_chart_levels(
             client,
             ticker=ticker,
             start_date=eff_start,
             end_date=eff_end,
-            min_dollars=min_dollars,
-            relative_size=relative_size,
-            trade_level_rank=trade_level_rank,
-            trade_level_count=trade_level_count,
+            levels=trade_level_count,
         )
         levels_data = [_curate_level(level) for level in raw_levels]
     except (APIError, LookupError, RuntimeError, TypeError, ValueError) as error:

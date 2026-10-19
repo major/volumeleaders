@@ -20,7 +20,7 @@ TradeLevel = _models.TradeLevel
 _curate_level = vars(_tools)["_curate_level"]
 _get_current_price = vars(_tools)["_get_current_price"]
 
-_LEVEL_COUNT = 6
+_LEVEL_COUNT = 3
 _CURRENT_PRICE = 209.95
 
 _FAKE_CURRENT_PRICE = 23.50
@@ -35,11 +35,11 @@ def _stub_get_company(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _make_levels(
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
 ) -> list[Any]:
     """Build TradeLevel model rows from the real API fixture."""
     return [
-        TradeLevel.model_validate(row) for row in sample_trade_level_response["data"]
+        TradeLevel.model_validate(row) for row in sample_chart_trade_levels_response
     ]
 
 
@@ -125,12 +125,12 @@ def test_curate_level_omits_removed_fields(
 
 def test_envelope_shape_default(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Return minimal envelope by default: data and metadata only."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -142,12 +142,12 @@ def test_envelope_shape_default(
 
 def test_envelope_omits_warnings_when_empty(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Omit the warnings key entirely when there are no warnings."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -161,7 +161,7 @@ def test_envelope_includes_warnings_when_present(
     """Include warnings key when endpoint fails."""
     monkeypatch.setattr(
         _tools,
-        "get_trade_levels",
+        "get_chart_levels",
         Mock(side_effect=RuntimeError("Server error")),
     )
 
@@ -173,12 +173,12 @@ def test_envelope_includes_warnings_when_present(
 
 def test_curated_fields_in_response(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Curate level rows to the expected compact field set in tool response."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -200,30 +200,30 @@ def test_curated_fields_in_response(
 
 def test_default_dates(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
-    """Default end_date to today and start_date to one year ago."""
+    """Default end_date to today and start_date to five years ago."""
     captured_kwargs: dict[str, Any] = {}
 
     def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
-        return _make_levels(sample_trade_level_response)
+        return _make_levels(sample_chart_trade_levels_response)
 
-    monkeypatch.setattr(_tools, "get_trade_levels", fake_endpoint)
+    monkeypatch.setattr(_tools, "get_chart_levels", fake_endpoint)
     monkeypatch.setattr(_tools, "today_date_string", lambda: "2026-04-02")
-    monkeypatch.setattr(_tools, "one_year_ago_date_string", lambda: "2025-04-02")
+    monkeypatch.setattr(_tools, "five_years_ago_date_string", lambda: "2021-04-02")
 
     trade_levels_tool(ticker="AMD", ctx=mcp_context)
 
-    assert captured_kwargs["start_date"] == "2025-04-02"
+    assert captured_kwargs["start_date"] == "2021-04-02"
     assert captured_kwargs["end_date"] == "2026-04-02"
 
 
 def test_explicit_dates_used(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Use explicit dates when provided."""
@@ -232,9 +232,9 @@ def test_explicit_dates_used(
     def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
-        return _make_levels(sample_trade_level_response)
+        return _make_levels(sample_chart_trade_levels_response)
 
-    monkeypatch.setattr(_tools, "get_trade_levels", fake_endpoint)
+    monkeypatch.setattr(_tools, "get_chart_levels", fake_endpoint)
 
     trade_levels_tool(
         ticker="AMD",
@@ -249,7 +249,7 @@ def test_explicit_dates_used(
 
 def test_ticker_passed_to_endpoint(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Pass ticker through to the endpoint function."""
@@ -258,9 +258,9 @@ def test_ticker_passed_to_endpoint(
     def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
-        return _make_levels(sample_trade_level_response)
+        return _make_levels(sample_chart_trade_levels_response)
 
-    monkeypatch.setattr(_tools, "get_trade_levels", fake_endpoint)
+    monkeypatch.setattr(_tools, "get_chart_levels", fake_endpoint)
 
     trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -269,7 +269,7 @@ def test_ticker_passed_to_endpoint(
 
 def test_dates_passed_to_endpoint(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Pass start_date and end_date through to the endpoint function."""
@@ -278,9 +278,9 @@ def test_dates_passed_to_endpoint(
     def fake_endpoint(*_args: object, **kwargs: object) -> list[Any]:
         """Capture endpoint kwargs for assertion."""
         captured_kwargs.update(kwargs)
-        return _make_levels(sample_trade_level_response)
+        return _make_levels(sample_chart_trade_levels_response)
 
-    monkeypatch.setattr(_tools, "get_trade_levels", fake_endpoint)
+    monkeypatch.setattr(_tools, "get_chart_levels", fake_endpoint)
 
     trade_levels_tool(
         ticker="AMD",
@@ -300,7 +300,7 @@ def test_endpoint_failure_returns_null_with_warning(
     """Return levels as null with a warning when endpoint fails."""
     monkeypatch.setattr(
         _tools,
-        "get_trade_levels",
+        "get_chart_levels",
         Mock(side_effect=RuntimeError("Server error")),
     )
 
@@ -315,7 +315,7 @@ def test_empty_result_returns_empty_list(
     mcp_context: object,
 ) -> None:
     """Return empty levels list when endpoint returns no rows."""
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: [])
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: [])
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -325,12 +325,12 @@ def test_empty_result_returns_empty_list(
 
 def test_metadata_counts(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Include accurate level count in metadata."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -344,7 +344,7 @@ def test_metadata_null_on_failure(
     """Return null metadata when endpoint fails."""
     monkeypatch.setattr(
         _tools,
-        "get_trade_levels",
+        "get_chart_levels",
         Mock(side_effect=RuntimeError("Timeout")),
     )
 
@@ -355,12 +355,12 @@ def test_metadata_null_on_failure(
 
 def test_proximity_pct_computed_from_current_price(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Enrich levels with proximity_pct relative to current price."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -376,12 +376,12 @@ def test_proximity_pct_computed_from_current_price(
 
 def test_proximity_pct_absent_when_no_current_price(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Omit proximity_pct when current price is unavailable."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
     monkeypatch.setattr(
         _tools,
         "get_company",
@@ -400,12 +400,12 @@ def test_proximity_pct_absent_when_no_current_price(
 
 def test_metadata_includes_current_price(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Include the ticker's current price in metadata."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
 
     result = trade_levels_tool(ticker="AMD", end_date="2026-04-02", ctx=mcp_context)
 
@@ -435,12 +435,12 @@ def test_get_current_price_falls_back_to_snapshots_when_company_price_null(
 
 def test_metadata_falls_back_to_snapshots_when_company_price_null(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Populate metadata current_price from snapshots when company price is null."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
     monkeypatch.setattr(
         _tools,
         "get_company",
@@ -459,12 +459,12 @@ def test_metadata_falls_back_to_snapshots_when_company_price_null(
 
 def test_current_price_failure_warns(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Warn and return null current_price when both lookup paths fail."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
     monkeypatch.setattr(
         _tools,
         "get_company",
@@ -493,12 +493,12 @@ def test_current_price_failure_warns(
 
 def test_current_price_company_failure_uses_snapshots_without_warning(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
     mcp_context: object,
 ) -> None:
     """Recover current price from snapshots when company lookup raises."""
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
     monkeypatch.setattr(
         _tools,
         "get_company",
@@ -519,7 +519,7 @@ def test_current_price_company_failure_uses_snapshots_without_warning(
 @pytest.mark.asyncio
 async def test_fastmcp_client_transport(
     monkeypatch: pytest.MonkeyPatch,
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
 ) -> None:
     """Call the registered tool through FastMCP client transport."""
 
@@ -529,8 +529,8 @@ async def test_fastmcp_client_transport(
         def close(self) -> None:
             """Provide the close method expected by lifespan cleanup."""
 
-    levels = _make_levels(sample_trade_level_response)
-    monkeypatch.setattr(_tools, "get_trade_levels", lambda *_, **__: levels)
+    levels = _make_levels(sample_chart_trade_levels_response)
+    monkeypatch.setattr(_tools, "get_chart_levels", lambda *_, **__: levels)
     monkeypatch.setattr(_mcp_utils, "VolumeLeadersClient", _FakeClient)
 
     async with Client(_mcp_module.mcp) as client:
