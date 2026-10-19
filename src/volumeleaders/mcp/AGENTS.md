@@ -48,10 +48,10 @@ mcp/
 
 ## CLIENT LIFECYCLE
 
-- `VolumeLeadersClient` is initialized once in MCP lifespan startup.
-- The shared client is stored in `VLContext` and reused across tool calls.
-- Lifespan shutdown always calls `client.close()`.
-- Tools access the client via `resolve_client(ctx)` from `utils.py`.
+- `VolumeLeadersClient` is **not** initialized at MCP lifespan startup. The lifespan yields an empty `VLContext` so transient cookie/auth failures do not crash the server.
+- The shared client is created lazily on the first tool call that calls `resolve_client(ctx)` from `utils.py`. Subsequent calls reuse the cached client stored in `VLContext.client`.
+- Lifespan shutdown calls `client.close()` only when the client was actually created.
+- This pattern means tools see auth errors as per-tool errors instead of taking the entire server down on startup.
 
 ## RESPONSE CONTRACT
 

@@ -25,6 +25,7 @@ def test_extract_cookies_success(monkeypatch: pytest.MonkeyPatch) -> None:
         SimpleNamespace(name="irrelevant", value="ignored"),
         SimpleNamespace(name="ASP.NET_SessionId", value="session"),
         SimpleNamespace(name=".ASPXAUTH", value="auth"),
+        SimpleNamespace(name="VLDeviceID", value="device"),
         SimpleNamespace(name="__RequestVerificationToken", value="token"),
     ]
     extractor = Mock(return_value=cookies)
@@ -35,9 +36,29 @@ def test_extract_cookies_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result == {
         "ASP.NET_SessionId": "session",
         ".ASPXAUTH": "auth",
+        "VLDeviceID": "device",
         "__RequestVerificationToken": "token",
     }
     extractor.assert_called_once_with(domain_name=".volumeleaders.com")
+
+
+def test_extract_cookies_missing_vldeviceid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Surface VLDeviceID as a missing required cookie."""
+    cookies = [
+        SimpleNamespace(name="ASP.NET_SessionId", value="session"),
+        SimpleNamespace(name=".ASPXAUTH", value="auth"),
+    ]
+    monkeypatch.setattr(
+        _auth.browser_cookie3,
+        "firefox",
+        Mock(return_value=cookies),
+    )
+
+    with pytest.raises(_exceptions.CookieExtractionError) as excinfo:
+        _auth.extract_cookies()
+    assert "VLDeviceID" in str(excinfo.value)
 
 
 def test_extract_cookies_reports_extractor_and_missing_cookie_errors(
@@ -61,8 +82,8 @@ def test_extract_cookies_reports_extractor_and_missing_cookie_errors(
 @pytest.mark.parametrize(
     ("status_code", "url", "text"),
     [
-        (500, "https://www.volumeleaders.com/ExecutiveSummary", "error"),
-        (200, "https://www.volumeleaders.com/ExecutiveSummary", "<html></html>"),
+        (500, "https://www.volumeleaders.com/Trades", "error"),
+        (200, "https://www.volumeleaders.com/Trades", "<html></html>"),
     ],
 )
 def test_fetch_xsrf_token_reports_invalid_responses(
@@ -80,6 +101,30 @@ def test_fetch_xsrf_token_reports_invalid_responses(
 
     with pytest.raises(_exceptions.AuthenticationError):
         _auth.fetch_xsrf_token(client, {})
+
+
+def test_fetch_xsrf_token_uses_trades_endpoint() -> None:
+    """Hit the /Trades endpoint with minimum date query parameters."""
+    client = Mock()
+    response = SimpleNamespace(
+        url="https://www.volumeleaders.com/Trades",
+        status_code=200,
+        text=(
+            '<html><body><input name="__RequestVerificationToken" '
+            'type="hidden" value="token-trades" /></body></html>'
+        ),
+    )
+    client.get.return_value = response
+
+    result = _auth.fetch_xsrf_token(client, {"ASP.NET_SessionId": "x"})
+
+    assert result == "token-trades"
+    client.get.assert_called_once()
+    call = client.get.call_args
+    assert call.args[0] == "https://www.volumeleaders.com/Trades"
+    assert "StartDate" in call.kwargs["params"]
+    assert "EndDate" in call.kwargs["params"]
+    assert call.kwargs["follow_redirects"] is False
 
 
 def test_client_request_paths_and_lifecycle(
@@ -141,10 +186,22 @@ def test_mcp_utility_error_and_data_paths(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Cover shared MCP context, formatting, and warning fallback helpers."""
-    context = SimpleNamespace(lifespan_context=_mcp.VLContext(client="client"))
+    existing = _mcp.VLContext(client="client")
+    context = SimpleNamespace(lifespan_context=existing)
     assert _utils.resolve_client(context) == "client"
-    with pytest.raises(RuntimeError):
+    with pytest.raises(TypeError):
         _utils.resolve_client(SimpleNamespace())
+
+    # Lazy initialization path: empty holder is populated on first call and
+    # reused on subsequent calls.
+    lazy_holder = _mcp.VLContext()
+    lazy_context = SimpleNamespace(lifespan_context=lazy_holder)
+    fake_client = SimpleNamespace(name="fake-client")
+    constructor = Mock(return_value=fake_client)
+    monkeypatch.setattr(_utils, "VolumeLeadersClient", constructor)
+    assert _utils.resolve_client(lazy_context) is fake_client
+    assert _utils.resolve_client(lazy_context) is fake_client
+    constructor.assert_called_once_with()
 
     assert _utils.is_auth_failure(_exceptions.AuthenticationError("expired"))
     assert _utils.is_auth_failure(

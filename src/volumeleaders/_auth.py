@@ -5,6 +5,7 @@ the XSRF token from the page HTML.
 """
 
 import re
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
@@ -39,7 +40,10 @@ def extract_cookies(browser: str = "firefox") -> dict[str, str]:
             are missing.
 
     Returns:
-        Dict of cookie name -> value for the three required auth cookies.
+        Dict of cookie name -> value for the required auth cookies. Currently
+        includes ``.ASPXAUTH``, ``ASP.NET_SessionId``, ``VLDeviceID``, and
+        ``__RequestVerificationToken``. ``VLDeviceID`` was added upstream in
+        late 2026 and is required for the server to honor the session.
 
     """
     try:
@@ -62,15 +66,16 @@ def extract_cookies(browser: str = "firefox") -> dict[str, str]:
         if cookie.name in (
             "__RequestVerificationToken",
             "ASP.NET_SessionId",
+            "VLDeviceID",
             ".ASPXAUTH",
         ):
             cookies[cookie.name] = cookie.value
 
-    required = {"ASP.NET_SessionId", ".ASPXAUTH"}
+    required = {"ASP.NET_SessionId", ".ASPXAUTH", "VLDeviceID"}
     missing = required - cookies.keys()
     if missing:
         msg = (
-            f"Missing required cookies: {missing}. "
+            f"Missing required cookies: {sorted(missing)}. "
             f"Are you logged in to volumeleaders.com in {browser}?"
         )
         raise CookieExtractionError(
@@ -87,8 +92,16 @@ def fetch_xsrf_token(
 ) -> str:
     """Fetch the XSRF token by loading an authenticated page.
 
-    Makes a GET request to the Executive Summary page and extracts the
-    hidden __RequestVerificationToken input value from the HTML.
+    Makes a GET request to the Trades page and extracts the hidden
+    ``__RequestVerificationToken`` input value from the HTML. Trades is
+    used because it returns 200 for an authorized session while still
+    embedding the XSRF token; upstream switched away from the legacy
+    ``/ExecutiveSummary`` endpoint which now redirects to a separate
+    Azure-hosted login page.
+
+    The minimum required query parameters are ``StartDate`` and
+    ``EndDate`` (any date works for the auth probe). ``Tickers`` is left
+    empty so the server returns no rows but still issues a token.
 
     Args:
         http_client: Configured httpx client.
@@ -102,10 +115,12 @@ def fetch_xsrf_token(
         The XSRF token string for use in the x-xsrf-token header.
 
     """
+    today = datetime.now(tz=UTC).date().isoformat()
     resp = http_client.get(
-        f"{BASE_URL}/ExecutiveSummary",
+        f"{BASE_URL}/Trades",
+        params={"Tickers": "", "StartDate": today, "EndDate": today},
         cookies=cookies,
-        follow_redirects=True,
+        follow_redirects=False,
     )
 
     if "/Login" in str(resp.url):
