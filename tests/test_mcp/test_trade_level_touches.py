@@ -12,16 +12,9 @@ from fastmcp import Client
 _mcp_module = import_module("volumeleaders.mcp")
 _mcp_utils = import_module("volumeleaders.mcp.utils")
 _tools = import_module("volumeleaders.mcp.tools.trade_level_touches")
-_models = import_module("volumeleaders.models")
 
 trade_level_touches_tool = _tools.trade_level_touches
-TradeLevelTouch = _models.TradeLevelTouch
 
-_curate_touch = vars(_tools)["_curate_touch"]
-_format_time = vars(_tools)["_format_time"]
-_resolve_filters = vars(_tools)["_resolve_filters"]
-
-_DATE_LENGTH = 10
 _BROAD_RELATIVE_SIZE = 5
 _BROAD_RANK = 5
 _BROAD_MIN_DOLLARS = 500_000_000
@@ -32,173 +25,8 @@ _EXPLICIT_RANK = 20
 _EXPLICIT_MIN_DOLLARS = 1_000_000
 _PARTIAL_RELATIVE_SIZE = 3
 _TOTAL_AVAILABLE = 1705
-
-
-# -- _format_time --------------------------------------------------------------
-
-
-def test_format_time_from_time_string(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Extract HH:MM from the 24-hour time string."""
-    touch = TradeLevelTouch.model_validate(sample_trade_level_touch_response["data"][0])
-    result = _format_time(touch)
-
-    assert result == "17:51"
-
-
-def test_format_time_fallback(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Fall back to parsing FullDateTime when FullTimeString24 is None."""
-    row = {**sample_trade_level_touch_response["data"][0], "FullTimeString24": None}
-    touch = TradeLevelTouch.model_validate(row)
-    result = _format_time(touch)
-
-    assert result == "17:51"
-
-
-# -- _curate_touch -------------------------------------------------------------
-
-
-def test_curate_touch_field_set(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Return exactly the expected compact fields from TradeLevelTouch model."""
-    touch = TradeLevelTouch.model_validate(sample_trade_level_touch_response["data"][0])
-    result = _curate_touch(touch)
-
-    assert set(result) == {
-        "ticker",
-        "time",
-        "price",
-        "dollars",
-        "volume",
-        "trades",
-        "rank",
-        "relative_size",
-        "level_origin_date",
-        "level_last_confirmed",
-    }
-
-
-def test_curate_touch_preserves_values(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Map model attributes to curated dict values correctly."""
-    touch = TradeLevelTouch.model_validate(sample_trade_level_touch_response["data"][0])
-    result = _curate_touch(touch)
-
-    assert result["ticker"] == touch.ticker
-    assert result["time"] == "17:51"
-    assert result["price"] == touch.price
-    assert result["dollars"] == "$738K"
-    assert result["volume"] == touch.volume
-    assert result["trades"] == touch.trades
-    assert result["rank"] == touch.trade_level_rank
-    assert result["relative_size"] == touch.relative_size
-
-
-def test_curate_touch_dollars_formatted(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Format dollars as a compact human-readable string."""
-    touch = TradeLevelTouch.model_validate(sample_trade_level_touch_response["data"][0])
-    result = _curate_touch(touch)
-
-    # Fixture has Dollars: 738341.52; formatted to "$738K".
-    assert isinstance(result["dollars"], str)
-    assert result["dollars"] == "$738K"
-
-
-def test_curate_touch_level_dates(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Format min_date and max_date as self-documenting level date fields."""
-    touch = TradeLevelTouch.model_validate(sample_trade_level_touch_response["data"][0])
-    result = _curate_touch(touch)
-
-    # Fixture has MinDate and MaxDate as ASP.NET dates; both should be
-    # formatted as YYYY-MM-DD strings.
-    assert result["level_origin_date"] is not None
-    assert result["level_last_confirmed"] is not None
-    assert len(result["level_origin_date"]) == _DATE_LENGTH
-    assert len(result["level_last_confirmed"]) == _DATE_LENGTH
-
-
-def test_curate_touch_omits_removed_fields(
-    sample_trade_level_touch_response: dict[str, Any],
-) -> None:
-    """Exclude fields dropped for token efficiency."""
-    touch = TradeLevelTouch.model_validate(sample_trade_level_touch_response["data"][0])
-    result = _curate_touch(touch)
-
-    assert "name" not in result
-    assert "sector" not in result
-    assert "industry" not in result
-    assert "trade_level_touches" not in result
-    assert "trade_level_rank" not in result  # renamed to "rank"
-    assert "date_time" not in result  # replaced by compact "time"
-    assert "dates" not in result  # replaced by level_origin_date/level_last_confirmed
-
-
-# -- _resolve_filters ----------------------------------------------------------
-
-
-def test_resolve_filters_broad_scan_defaults() -> None:
-    """Apply tighter defaults when no tickers are specified."""
-    rs, tlr, md = _resolve_filters(
-        tickers="",
-        relative_size=None,
-        trade_level_rank=None,
-        min_dollars=None,
-    )
-
-    assert rs == _BROAD_RELATIVE_SIZE
-    assert tlr == _BROAD_RANK
-    assert md == _BROAD_MIN_DOLLARS
-
-
-def test_resolve_filters_ticker_defaults() -> None:
-    """Apply permissive defaults when tickers are specified."""
-    rs, tlr, md = _resolve_filters(
-        tickers="AAPL",
-        relative_size=None,
-        trade_level_rank=None,
-        min_dollars=None,
-    )
-
-    assert rs == 0
-    assert tlr == _TICKER_RANK
-    assert md == _TICKER_MIN_DOLLARS
-
-
-def test_resolve_filters_explicit_values_win() -> None:
-    """Explicit values override both default sets."""
-    rs, tlr, md = _resolve_filters(
-        tickers="",
-        relative_size=_EXPLICIT_RELATIVE_SIZE,
-        trade_level_rank=_EXPLICIT_RANK,
-        min_dollars=_EXPLICIT_MIN_DOLLARS,
-    )
-
-    assert rs == _EXPLICIT_RELATIVE_SIZE
-    assert tlr == _EXPLICIT_RANK
-    assert md == _EXPLICIT_MIN_DOLLARS
-
-
-def test_resolve_filters_partial_override() -> None:
-    """Mix of explicit and default values resolves correctly."""
-    rs, tlr, md = _resolve_filters(
-        tickers="AAPL",
-        relative_size=_PARTIAL_RELATIVE_SIZE,
-        trade_level_rank=None,
-        min_dollars=None,
-    )
-
-    assert rs == _PARTIAL_RELATIVE_SIZE
-    assert tlr == _TICKER_RANK
-    assert md == _TICKER_MIN_DOLLARS
+_TOUCH_PRICE = 4.6
+_TOUCH_VOLUME = 161917
 
 
 # -- Tool integration tests ----------------------------------------------------
@@ -207,9 +35,18 @@ def test_resolve_filters_partial_override() -> None:
 def _serve_touches(
     client: object,
     sample_trade_level_touch_response: dict[str, Any],
+    *,
+    row_overrides: dict[str, Any] | None = None,
 ) -> None:
-    """Wire a mock client to serve the real trade level touch payload."""
-    client.post_datatables.return_value = sample_trade_level_touch_response["data"]
+    """Wire a mock client to serve the real trade level touch payload.
+
+    ``row_overrides`` replaces fields on the fixture rows before serving,
+    so edge cases reuse the real payload shape instead of synthetic rows.
+    """
+    rows = sample_trade_level_touch_response["data"]
+    if row_overrides is not None:
+        rows = [{**row, **row_overrides} for row in rows]
+    client.post_datatables.return_value = rows
 
 
 def _last_touch_request(client: object) -> dict[str, list[str]]:
@@ -285,6 +122,134 @@ def test_curated_fields_in_response(
         "level_origin_date",
         "level_last_confirmed",
     }
+
+
+def test_curated_time_from_time_string(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Expose HH:MM from the 24-hour time string in the curated time field."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(client, sample_trade_level_touch_response)
+
+    result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
+
+    assert result["data"]["touches"][0]["time"] == "17:51"
+
+
+def test_curated_time_falls_back_to_full_datetime(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Fall back to parsing FullDateTime when FullTimeString24 is missing."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(
+        client,
+        sample_trade_level_touch_response,
+        row_overrides={"FullTimeString24": None},
+    )
+
+    result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
+
+    assert result["data"]["touches"][0]["time"] == "17:51"
+
+
+def test_curated_values_in_response(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Map model attributes to curated touch values in the response."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(client, sample_trade_level_touch_response)
+
+    result = trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
+
+    touch = result["data"]["touches"][0]
+    assert touch["ticker"] == "WTID"
+    assert touch["time"] == "17:51"
+    assert touch["price"] == _TOUCH_PRICE
+    assert touch["dollars"] == "$738K"
+    assert touch["volume"] == _TOUCH_VOLUME
+    assert touch["trades"] == 1
+    assert touch["rank"] == 1
+    assert touch["relative_size"] == 1
+    assert touch["level_origin_date"] == "2026-03-23"
+    assert touch["level_last_confirmed"] == "2026-03-23"
+
+
+def test_broad_scan_filter_defaults(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Apply tighter filter defaults when no tickers are specified."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(client, sample_trade_level_touch_response)
+
+    trade_level_touches_tool(date="2026-04-02", ctx=mcp_context)
+
+    request = _last_touch_request(client)
+    assert request["RelativeSize"] == [str(_BROAD_RELATIVE_SIZE)]
+    assert request["TradeLevelRank"] == [str(_BROAD_RANK)]
+    assert float(request["MinDollars"][0]) == _BROAD_MIN_DOLLARS
+
+
+def test_ticker_filter_defaults(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Apply permissive filter defaults when tickers are specified."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(client, sample_trade_level_touch_response)
+
+    trade_level_touches_tool(tickers="AAPL", date="2026-04-02", ctx=mcp_context)
+
+    request = _last_touch_request(client)
+    assert request["RelativeSize"] == ["0"]
+    assert request["TradeLevelRank"] == [str(_TICKER_RANK)]
+    assert float(request["MinDollars"][0]) == _TICKER_MIN_DOLLARS
+
+
+def test_explicit_filters_win(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Pass explicit filters through instead of applying defaults."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(client, sample_trade_level_touch_response)
+
+    trade_level_touches_tool(
+        date="2026-04-02",
+        relative_size=_EXPLICIT_RELATIVE_SIZE,
+        trade_level_rank=_EXPLICIT_RANK,
+        min_dollars=_EXPLICIT_MIN_DOLLARS,
+        ctx=mcp_context,
+    )
+
+    request = _last_touch_request(client)
+    assert request["RelativeSize"] == [str(_EXPLICIT_RELATIVE_SIZE)]
+    assert request["TradeLevelRank"] == [str(_EXPLICIT_RANK)]
+    assert float(request["MinDollars"][0]) == _EXPLICIT_MIN_DOLLARS
+
+
+def test_partial_filter_overrides(
+    sample_trade_level_touch_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Mix explicit and default filter values for a ticker query."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_touches(client, sample_trade_level_touch_response)
+
+    trade_level_touches_tool(
+        tickers="AAPL",
+        date="2026-04-02",
+        relative_size=_PARTIAL_RELATIVE_SIZE,
+        ctx=mcp_context,
+    )
+
+    request = _last_touch_request(client)
+    assert request["RelativeSize"] == [str(_PARTIAL_RELATIVE_SIZE)]
+    assert request["TradeLevelRank"] == [str(_TICKER_RANK)]
+    assert float(request["MinDollars"][0]) == _TICKER_MIN_DOLLARS
 
 
 def test_default_date_uses_today(

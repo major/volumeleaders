@@ -12,16 +12,8 @@ from fastmcp import Client
 _mcp_module = import_module("volumeleaders.mcp")
 _mcp_utils = import_module("volumeleaders.mcp.utils")
 _tools = import_module("volumeleaders.mcp.tools.trades")
-_models = import_module("volumeleaders.models")
 
 trades_tool = _tools.trades
-Trade = _models.Trade
-
-_curate_trade = vars(_tools)["_curate_trade"]
-_format_time = vars(_tools)["_format_time"]
-_collect_trade_types = vars(_tools)["_collect_trade_types"]
-_resolve_dates = vars(_tools)["_resolve_dates"]
-_resolve_include_flags = vars(_tools)["_resolve_include_flags"]
 
 _PRICE = 655.24
 _CURRENT_PRICE = 655.01
@@ -30,7 +22,6 @@ _UNRANKED = 9999
 _DOLLARS_MULTIPLIER = 26.94
 _DISTRIBUTION = 0.99
 _TRADE_COUNT = 48
-_DATE_LENGTH = 10
 _RESULT_COUNT = 2
 _DEFAULT_RANK = 100
 _OFFSET = 20
@@ -38,269 +29,6 @@ _PAGE_SIZE = 10
 _RANK_COLUMN = 11
 _DOLLARS_COLUMN = 8
 _MULTIPLIER_COLUMN = 9
-
-
-# -- _format_time --------------------------------------------------------------
-
-
-def test_format_time_from_time_string(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Extract HH:MM from the 24-hour time string."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _format_time(trade)
-
-    assert result == "17:18"
-
-
-def test_format_time_fallback_to_full_datetime(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Fall back to parsing FullDateTime when FullTimeString24 is None."""
-    row = {**sample_trade_response["data"][0], "FullTimeString24": None}
-    trade = Trade.model_validate(row)
-    result = _format_time(trade)
-
-    assert result == "17:18"
-
-
-def test_format_time_both_null(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Return empty string when both time fields are None."""
-    row = {
-        **sample_trade_response["data"][0],
-        "FullTimeString24": None,
-        "FullDateTime": None,
-    }
-    trade = Trade.model_validate(row)
-    result = _format_time(trade)
-
-    assert result == ""
-
-
-# -- _collect_trade_types ------------------------------------------------------
-
-
-def test_collect_trade_types_dark_pool(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Collect dark_pool flag from fixture data (DarkPool=1)."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _collect_trade_types(trade)
-
-    assert "dark_pool" in result
-
-
-def test_collect_trade_types_no_flags_returns_block_sentinel(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Return ["block"] sentinel when no special type flags are set."""
-    row = {
-        **sample_trade_response["data"][0],
-        "DarkPool": 0,
-        "Sweep": 0,
-        "LatePrint": 0,
-        "SignaturePrint": 0,
-        "OpeningTrade": 0,
-        "ClosingTrade": 0,
-        "PhantomPrint": 0,
-    }
-    trade = Trade.model_validate(row)
-    result = _collect_trade_types(trade)
-
-    assert result == ["block"]
-
-
-def test_collect_trade_types_multiple_flags(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Collect multiple active flags into a single list."""
-    row = {
-        **sample_trade_response["data"][0],
-        "DarkPool": 1,
-        "Sweep": 1,
-        "LatePrint": 1,
-    }
-    trade = Trade.model_validate(row)
-    result = _collect_trade_types(trade)
-
-    assert set(result) == {"dark_pool", "sweep", "late_print"}
-
-
-# -- _curate_trade -------------------------------------------------------------
-
-
-def test_curate_trade_field_set(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Return exactly the expected compact fields from Trade model."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {})
-
-    assert set(result) == {
-        "ticker",
-        "date",
-        "time",
-        "price",
-        "current_price",
-        "dollars",
-        "volume",
-        "trade_rank",
-        "dollars_multiplier",
-        "cumulative_distribution",
-        "trade_count",
-        "types",
-        "sector",
-        "last_comparable_date",
-    }
-
-
-def test_curate_trade_preserves_values(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Map model attributes to curated dict values correctly."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {"SPY": 655.01})
-
-    assert result["ticker"] == "SPY"
-    assert result["time"] == "17:18"
-    assert result["price"] == _PRICE
-    assert result["current_price"] == _CURRENT_PRICE
-    assert result["dollars"] == "$315.8M"
-    assert result["volume"] == _VOLUME
-    assert result["trade_rank"] == _UNRANKED
-    assert result["dollars_multiplier"] == _DOLLARS_MULTIPLIER
-    assert result["cumulative_distribution"] == _DISTRIBUTION
-    assert result["trade_count"] == _TRADE_COUNT
-    assert result["sector"] == "Large Caps"
-
-
-def test_curate_trade_current_price_none_when_missing(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Return None for current_price when ticker not in snapshot map."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {})
-
-    assert result["current_price"] is None
-
-
-def test_curate_trade_dollars_formatted(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Format dollars as a compact human-readable string."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {})
-
-    # Fixture has Dollars: 315839440.04; formatted to "$315.8M".
-    assert isinstance(result["dollars"], str)
-    assert result["dollars"] == "$315.8M"
-
-
-def test_curate_trade_types_populated(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Include active trade type flags in types list."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {})
-
-    # Fixture has DarkPool=1, all others 0.
-    assert result["types"] == ["dark_pool"]
-
-
-def test_curate_trade_last_comparable_date(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Format LastComparibleTradeDate as YYYY-MM-DD string."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {})
-
-    assert result["last_comparable_date"] is not None
-    assert len(result["last_comparable_date"]) == _DATE_LENGTH
-
-
-def test_curate_trade_omits_removed_fields(
-    sample_trade_response: dict[str, Any],
-) -> None:
-    """Exclude fields dropped for token efficiency."""
-    trade = Trade.model_validate(sample_trade_response["data"][0])
-    result = _curate_trade(trade, {})
-
-    assert "name" not in result
-    assert "industry" not in result
-    assert "bid" not in result
-    assert "ask" not in result
-    assert "rsi_hour" not in result
-    assert "rsi_day" not in result
-    assert "trade_conditions" not in result
-
-
-# -- _resolve_dates ------------------------------------------------------------
-
-
-def test_resolve_dates_broad_scan_defaults() -> None:
-    """Default to today for both start and end when no tickers."""
-    start, end = _resolve_dates(tickers="", start_date="", end_date="")
-
-    # Both should be today (same value).
-    assert start == end
-
-
-def test_resolve_dates_ticker_query_defaults(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Default to 90-day lookback when tickers are specified."""
-    monkeypatch.setattr(_tools, "today_date_string", lambda: "2026-04-02")
-    monkeypatch.setattr(_tools, "ninety_days_ago_date_string", lambda: "2026-01-02")
-
-    start, end = _resolve_dates(tickers="AAPL", start_date="", end_date="")
-
-    assert start == "2026-01-02"
-    assert end == "2026-04-02"
-
-
-def test_resolve_dates_explicit_values_win() -> None:
-    """Explicit values override all defaults."""
-    start, end = _resolve_dates(
-        tickers="AAPL",
-        start_date="2025-01-01",
-        end_date="2025-06-01",
-    )
-
-    assert start == "2025-01-01"
-    assert end == "2025-06-01"
-
-
-def test_resolve_dates_explicit_start_only(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Explicit start_date with default end_date."""
-    monkeypatch.setattr(_tools, "today_date_string", lambda: "2026-04-02")
-
-    start, end = _resolve_dates(tickers="AAPL", start_date="2026-03-01", end_date="")
-
-    assert start == "2026-03-01"
-    assert end == "2026-04-02"
-
-
-# -- _resolve_include_flags ----------------------------------------------------
-
-
-def test_resolve_include_flags_broad_scan() -> None:
-    """Exclude phantom and offsetting trades for broad scans."""
-    phantom, offsetting = _resolve_include_flags(tickers="")
-
-    assert phantom == -1
-    assert offsetting == -1
-
-
-def test_resolve_include_flags_ticker_query() -> None:
-    """Include phantom and offsetting trades for ticker queries."""
-    phantom, offsetting = _resolve_include_flags(tickers="AAPL")
-
-    assert phantom == 1
-    assert offsetting == 1
 
 
 # -- Tool integration tests ----------------------------------------------------
@@ -311,9 +39,17 @@ def _serve_trades(
     sample_trade_response: dict[str, Any],
     *,
     snapshots: str = "",
+    row_overrides: dict[str, Any] | None = None,
 ) -> None:
-    """Wire a mock client to serve the real trades and snapshot payloads."""
-    client.post_datatables.return_value = sample_trade_response["data"]
+    """Wire a mock client to serve the real trades and snapshot payloads.
+
+    ``row_overrides`` replaces fields on every fixture row before serving,
+    so edge cases reuse the real payload shape instead of synthetic rows.
+    """
+    rows = sample_trade_response["data"]
+    if row_overrides is not None:
+        rows = [{**row, **row_overrides} for row in rows]
+    client.post_datatables.return_value = rows
     client.post_json.return_value = snapshots
 
 
@@ -410,6 +146,199 @@ def test_curated_fields_in_response(
         "sector",
         "last_comparable_date",
     }
+
+
+def test_curated_time_from_time_string(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Expose HH:MM from the 24-hour time string in the curated time field."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(client, sample_trade_response)
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert result["data"]["trades"][0]["time"] == "17:18"
+
+
+def test_curated_time_falls_back_to_full_datetime(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Fall back to FullDateTime when FullTimeString24 is missing."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(
+        client,
+        sample_trade_response,
+        row_overrides={"FullTimeString24": None},
+    )
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert result["data"]["trades"][0]["time"] == "17:18"
+
+
+def test_curated_time_empty_when_both_missing(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Return an empty time string when both timestamp fields are missing."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(
+        client,
+        sample_trade_response,
+        row_overrides={"FullTimeString24": None, "FullDateTime": None},
+    )
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert result["data"]["trades"][0]["time"] == ""
+
+
+def test_curated_types_dark_pool(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Include the dark_pool flag in the curated types list."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(client, sample_trade_response)
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert result["data"]["trades"][0]["types"] == ["dark_pool"]
+
+
+def test_curated_types_block_sentinel(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Return the ["block"] sentinel when no special type flags are set."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(
+        client,
+        sample_trade_response,
+        row_overrides={
+            "DarkPool": 0,
+            "Sweep": 0,
+            "LatePrint": 0,
+            "SignaturePrint": 0,
+            "OpeningTrade": 0,
+            "ClosingTrade": 0,
+            "PhantomPrint": 0,
+        },
+    )
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert result["data"]["trades"][0]["types"] == ["block"]
+
+
+def test_curated_types_multiple_flags(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Collect multiple active type flags into one list."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(
+        client,
+        sample_trade_response,
+        row_overrides={"DarkPool": 1, "Sweep": 1, "LatePrint": 1},
+    )
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert set(result["data"]["trades"][0]["types"]) == {
+        "dark_pool",
+        "sweep",
+        "late_print",
+    }
+
+
+def test_curated_values_in_response(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Map model attributes to curated trade values in the response."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(client, sample_trade_response, snapshots="SPY:655.01;")
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    trade = result["data"]["trades"][0]
+    assert trade["ticker"] == "SPY"
+    assert trade["time"] == "17:18"
+    assert trade["price"] == _PRICE
+    assert trade["current_price"] == _CURRENT_PRICE
+    assert trade["dollars"] == "$315.8M"
+    assert trade["volume"] == _VOLUME
+    assert trade["trade_rank"] == _UNRANKED
+    assert trade["dollars_multiplier"] == _DOLLARS_MULTIPLIER
+    assert trade["cumulative_distribution"] == _DISTRIBUTION
+    assert trade["trade_count"] == _TRADE_COUNT
+    assert trade["sector"] == "Large Caps"
+    assert trade["last_comparable_date"] == "2026-03-31"
+
+
+def test_curated_current_price_null_without_snapshot(
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Leave current_price null when the ticker is absent from snapshots."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(client, sample_trade_response)
+
+    result = trades_tool(
+        start_date="2026-04-01",
+        end_date="2026-04-01",
+        ctx=mcp_context,
+    )
+
+    assert result["data"]["trades"][0]["current_price"] is None
+
+
+def test_explicit_start_only_defaults_end_to_today(
+    monkeypatch: pytest.MonkeyPatch,
+    sample_trade_response: dict[str, Any],
+    mcp_context: object,
+) -> None:
+    """Keep an explicit start date and default the end date to today."""
+    client = mcp_context.lifespan_context.client  # type: ignore[attr-defined]
+    _serve_trades(client, sample_trade_response)
+    monkeypatch.setattr(_tools, "today_date_string", lambda: "2026-04-02")
+
+    trades_tool(tickers="AAPL", start_date="2026-03-01", ctx=mcp_context)
+
+    request = _last_trade_request(client)
+    assert request["StartDate"] == ["2026-03-01"]
+    assert request["EndDate"] == ["2026-04-02"]
 
 
 def test_default_dates_broad_scan(
