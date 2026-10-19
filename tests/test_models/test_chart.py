@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import Any
 
 _models = import_module("volumeleaders.models")
+ChartTrade = _models.ChartTrade
 Company = _models.Company
 PriceBar = _models.PriceBar
 Snapshot = _models.Snapshot
@@ -40,3 +41,17 @@ def test_price_bar_model_validates_real_price_bar_response(
     assert bar.low_price > 0
     assert bar.close_price > 0
     assert bar.volume > 0
+
+
+def test_chart_trade_model_validates_real_trade_response(
+    sample_price_bar_response: list[Any],
+) -> None:
+    """Validate ChartTrade model from real chart trades payload."""
+    trade = ChartTrade.model_validate(sample_price_bar_response[1][0])
+
+    assert trade.ticker is None
+    assert trade.price > 0
+    assert trade.volume > 0
+    assert trade.dollars > 0
+    assert trade.full_date_time == "2026-04-01T16:00:00"
+    assert trade.date is not None

@@ -58,6 +58,7 @@ with VolumeLeadersClient() as client:
 | `get_snapshot` | Chart snapshot for a ticker |
 | `get_all_snapshots` | Price snapshots for all tickers |
 | `get_price_data` | Price/volume bar data |
+| `get_chart_trades` | Individual large trades from the chart envelope |
 | `get_chart_levels` | Chart trade levels |
 | `get_trade_levels` | Trade level data |
 | `get_trade_level_touches` | Trade level touch events |

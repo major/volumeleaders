@@ -27,7 +27,7 @@ def test_chart_endpoints_validate_fixture_models(
     sample_company_response: dict[str, Any],
     sample_snapshot_response: dict[str, Any],
     sample_price_bar_response: list[Any],
-    sample_trade_level_response: dict[str, Any],
+    sample_chart_trade_levels_response: list[dict[str, Any]],
 ) -> None:
     """Transform chart JSON, DataTables, and date-key requests into models."""
     client = Mock()
@@ -35,8 +35,8 @@ def test_chart_endpoints_validate_fixture_models(
         sample_price_bar_response,
         sample_snapshot_response,
         sample_company_response,
+        sample_chart_trade_levels_response,
     ]
-    client.post_datatables.return_value = sample_trade_level_response["data"]
 
     price_bars = _chart.get_price_data(
         client,
@@ -48,9 +48,9 @@ def test_chart_endpoints_validate_fixture_models(
     company = _chart.get_company(client, ticker="SPY")
     levels = _chart.get_chart_levels(
         client,
-        ticker="AMD",
-        start_date="2026-04-01",
-        end_date="2026-04-02",
+        ticker="CRDU",
+        start_date="2026-05-19",
+        end_date="2026-05-20",
     )
 
     assert isinstance(price_bars[0], _models.PriceBar)

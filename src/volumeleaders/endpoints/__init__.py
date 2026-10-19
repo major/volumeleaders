@@ -7,6 +7,7 @@ from volumeleaders.endpoints.alerts import (
 )
 from volumeleaders.endpoints.chart import (
     get_chart_levels,
+    get_chart_trades,
     get_company,
     get_price_data,
     get_snapshot,
@@ -43,6 +44,7 @@ __all__ = [
     "get_alert_configs",
     "get_all_snapshots",
     "get_chart_levels",
+    "get_chart_trades",
     "get_company",
     "get_dark_pool_volume_report",
     "get_earnings",

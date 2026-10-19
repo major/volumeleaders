@@ -12,7 +12,7 @@ Standalone functions that build requests, call `client.post_json()`, `client.pos
 | Add Form-encoded endpoint | Follow `sector.py` (`get_sector_daily_returns`) | Build urlencoded body string, call `post_form`, validate |
 | Add DataTables endpoint | Follow `earnings.py` | Define columns list, build `DataTablesRequest`, call `post_datatables` |
 | Add filtered DataTables | Follow `trades.py` | Full filter set via `custom_filters` dict |
-| Unique response parsing | `chart.py` | `get_price_data` unwraps nested arrays; `get_snapshot` uses envelope model |
+| Unique response parsing | `chart.py` | `get_price_data` unwraps `response[0]`; `get_chart_trades` unwraps `response[1]`; `get_snapshot` uses envelope model |
 
 ## REQUEST PATTERNS
 

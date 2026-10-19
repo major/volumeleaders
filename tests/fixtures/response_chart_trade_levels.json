@@ -1,0 +1,33 @@
+[
+  {
+    "_source": "Shape validated against vl-tv-bridge test/background-trade-date-range.test.js levelsData default and firefox/background.js:479-488. NOT a real API capture; no HAR entry exists for GetChartTradeLevels.",
+    "Price": 36.8,
+    "Ticker": "CRDU",
+    "TradeLevelRank": 1,
+    "Dollars": 1459892.8,
+    "Volume": 39671,
+    "Trades": 1,
+    "Dates": "2026-05-19 - 2026-05-19",
+    "MinDate": "/Date(1779148800000)/"
+  },
+  {
+    "Price": 36.5,
+    "Ticker": "CRDU",
+    "TradeLevelRank": 2,
+    "Dollars": 987654.32,
+    "Volume": 27000,
+    "Trades": 2,
+    "Dates": "2026-05-12 - 2026-05-19",
+    "MinDate": "/Date(1778544000000)/"
+  },
+  {
+    "Price": 36.2,
+    "Ticker": "CRDU",
+    "TradeLevelRank": 3,
+    "Dollars": 654321.0,
+    "Volume": 18000,
+    "Trades": 1,
+    "Dates": "2026-04-21 - 2026-05-19",
+    "MinDate": "/Date(1776700800000)/"
+  }
+]

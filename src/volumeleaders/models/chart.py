@@ -146,3 +146,18 @@ class SnapshotResponse(VLBaseModel):
 
     snapshot: Snapshot = Field(alias="ticker")
     status: str = Field(alias="status")
+
+
+class ChartTrade(VLBaseModel):
+    """Single large trade from GetAllPriceVolumeTradeData envelope index 1."""
+
+    ticker: str | None = Field(alias="Ticker")
+    price: float = Field(alias="Price")
+    trade_rank: int = Field(alias="TradeRank")
+    trade_rank_snapshot: int = Field(alias="TradeRankSnapshot")
+    dollars: float = Field(alias="Dollars")
+    volume: int = Field(alias="Volume")
+    dark_pool_trade: bool = Field(alias="DarkPoolTrade")
+    sweep: bool = Field(alias="Sweep")
+    date: AspNetDate = Field(alias="Date")
+    full_date_time: str = Field(alias="FullDateTime")
