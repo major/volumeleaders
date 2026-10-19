@@ -100,7 +100,7 @@ The library includes an [MCP](https://modelcontextprotocol.io/) server that expo
 No installation needed:
 
 ```bash
-uv run --with "volumeleaders[mcp]" volumeleaders-mcp
+uv run --with "volumeleaders" volumeleaders-mcp
 ```
 
 Or if the package is already installed:
@@ -124,7 +124,7 @@ Create `.mcp.json` in your project root.
     "volumeleaders": {
       "type": "stdio",
       "command": "uv",
-      "args": ["run", "--with", "volumeleaders[mcp]", "volumeleaders-mcp"]
+      "args": ["run", "--with", "volumeleaders", "volumeleaders-mcp"]
     }
   }
 }
@@ -146,7 +146,7 @@ Add to `opencode.json` (or `opencode.jsonc`) in your project root.
   "mcp": {
     "volumeleaders": {
       "type": "local",
-      "command": ["uv", "run", "--with", "volumeleaders[mcp]", "volumeleaders-mcp"]
+      "command": ["uv", "run", "--with", "volumeleaders", "volumeleaders-mcp"]
     }
   }
 }

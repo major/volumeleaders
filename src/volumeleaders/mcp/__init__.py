@@ -7,7 +7,15 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from fastmcp import FastMCP
+try:
+    from fastmcp import FastMCP
+except ModuleNotFoundError as exc:
+    sys.stderr.write(
+        "volumeleaders-mcp requires the 'fastmcp' package.\n"
+        "Install it with: uv add volumeleaders\n"
+        "or: pip install fastmcp\n",
+    )
+    raise SystemExit(1) from exc
 
 from volumeleaders._client import VolumeLeadersClient
 
