@@ -5,6 +5,7 @@ from importlib import import_module
 from typing import Any
 from unittest.mock import Mock
 
+_client_module = import_module("volumeleaders._client")
 _trades = import_module("volumeleaders.endpoints.trades")
 _models = import_module("volumeleaders.models")
 get_all_snapshots = _trades.get_all_snapshots
@@ -20,7 +21,7 @@ def test_get_trades_returns_typed_trade_models(
     sample_trade_response: dict[str, Any],
 ) -> None:
     """Return a Trade model list from DataTables row payloads."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_datatables.return_value = sample_trade_response["data"]
 
     trades = get_trades(
@@ -38,7 +39,7 @@ def test_get_trade_clusters_returns_typed_models(
     sample_trade_cluster_response: dict[str, Any],
 ) -> None:
     """Return a TradeCluster model list from DataTables row payloads."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_datatables.return_value = sample_trade_cluster_response["data"]
 
     clusters = get_trade_clusters(
@@ -56,7 +57,7 @@ def test_get_trade_cluster_bombs_returns_typed_models(
     sample_trade_cluster_bomb_response: dict[str, Any],
 ) -> None:
     """Return a TradeClusterBomb model list from DataTables row payloads."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_datatables.return_value = sample_trade_cluster_bomb_response["data"]
 
     bombs = get_trade_cluster_bombs(
@@ -74,7 +75,7 @@ def test_get_all_snapshots_parses_raw_snapshot_string(
     sample_snapshot_string: str,
 ) -> None:
     """Parse ticker-price mapping from the raw all-snapshots response string."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_json.return_value = json.loads(sample_snapshot_string)
 
     snapshots = get_all_snapshots(client)

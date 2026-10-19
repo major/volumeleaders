@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
 
+import httpx
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -161,7 +162,7 @@ def mock_client() -> tuple[Any, Mock]:
     """Create a VolumeLeadersClient with mocked HTTP transport, bypassing auth."""
     _client_module = import_module("volumeleaders._client")
     client = object.__new__(_client_module.VolumeLeadersClient)
-    http_mock = Mock()
+    http_mock = Mock(spec=httpx.Client)
     client.__dict__["_http"] = http_mock
     client.__dict__["_cookies"] = {"ASP.NET_SessionId": "session", ".ASPXAUTH": "auth"}
     client.__dict__["_xsrf_" + "token"] = "test-xsrf-token"

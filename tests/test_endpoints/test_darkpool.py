@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import Any
 from unittest.mock import Mock
 
+_client_module = import_module("volumeleaders._client")
 get_dark_pool_volume_report = import_module(
     "volumeleaders.endpoints.darkpool",
 ).get_dark_pool_volume_report
@@ -13,7 +14,7 @@ def test_get_dark_pool_volume_report(
     sample_dark_pool_volume_report_response: list[dict[str, Any]],
 ) -> None:
     """Validate get_dark_pool_volume_report returns typed models."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_json.return_value = sample_dark_pool_volume_report_response
 
     results = get_dark_pool_volume_report(
@@ -43,7 +44,7 @@ def test_get_dark_pool_volume_report_empty_dates(
     sample_dark_pool_volume_report_response: list[dict[str, Any]],
 ) -> None:
     """Validate get_dark_pool_volume_report handles default date values."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_json.return_value = sample_dark_pool_volume_report_response
 
     results = get_dark_pool_volume_report(

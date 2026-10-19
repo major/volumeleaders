@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import Any
 from unittest.mock import Mock
 
+import httpx
 import pytest
 
 _exceptions = import_module("volumeleaders._exceptions")
@@ -15,7 +16,7 @@ def test_post_json_raises_api_error_on_non_200(
 ) -> None:
     """Raise APIError when JSON endpoint returns a non-200 status code."""
     client, http_mock = mock_client
-    response = Mock()
+    response = Mock(spec=httpx.Response)
     response.status_code = 500
     response.text = "server error"
     http_mock.post.return_value = response
@@ -29,7 +30,7 @@ def test_post_datatables_extracts_data_array(
 ) -> None:
     """Return the data array from standard DataTables response envelopes."""
     client, http_mock = mock_client
-    response = Mock()
+    response = Mock(spec=httpx.Response)
     response.status_code = 200
     response.json.return_value = {"data": [{"Ticker": "SPY"}]}
     http_mock.post.return_value = response
@@ -44,7 +45,7 @@ def test_post_datatables_raises_when_data_key_missing(
 ) -> None:
     """Raise APIError when DataTables response omits the expected data key."""
     client, http_mock = mock_client
-    response = Mock()
+    response = Mock(spec=httpx.Response)
     response.status_code = 200
     response.json.return_value = {"recordsTotal": 1}
     http_mock.post.return_value = response

@@ -4,6 +4,7 @@ from importlib import import_module
 from typing import Any
 from unittest.mock import Mock
 
+_client_module = import_module("volumeleaders._client")
 get_exhaustion_scores = import_module(
     "volumeleaders.endpoints.exhaustion",
 ).get_exhaustion_scores
@@ -13,7 +14,7 @@ def test_get_exhaustion_scores_returns_typed_model(
     sample_exhaustion_response: dict[str, Any],
 ) -> None:
     """Validate endpoint transforms JSON payload into ExhaustionScore model."""
-    client = Mock()
+    client = Mock(spec=_client_module.VolumeLeadersClient)
     client.post_json.return_value = sample_exhaustion_response
 
     score = get_exhaustion_scores(client)
